@@ -1,5 +1,6 @@
 # IRIS by imari
-### A real time non-rotating Shwarzchild black hole renderer
+### A real time GPU accelerated render engine utilizing MacOS's Metal API for visualizing non-rotating Shwarzchild black holes.
+
 # How to use
 The code works right out the box as it contains all the relavant libraries and dependencies needed. However, this 
 is designed to work on Macs, more specifically anything with an Apple Sillicon chip (M1 or higher), since it uses 
