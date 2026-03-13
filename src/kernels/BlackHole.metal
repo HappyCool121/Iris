@@ -34,6 +34,7 @@ float3 sample_skybox(float3 dir) {
 kernel void render_black_hole(
     device uint* pixels [[buffer(0)]],
     constant Uniforms& uniforms [[buffer(1)]],
+    texture2d<float, access::sample> noise_texture [[texture(0)]],
     uint2 gid [[thread_position_in_grid]]
 ) {
     // Prevent out-of-bounds execution
@@ -80,7 +81,7 @@ kernel void render_black_hole(
     // 5. Setup Loop Variables
     float3 prev_pos3D = camera_pos;
     float d_phi = 0.05f;
-    int max_steps = 1000;
+    int max_steps = 200;
 
     float3 disc_normal = uniforms.disc_normal;
 
@@ -141,8 +142,78 @@ kernel void render_black_hole(
             float dist_to_center = length(hit_point);
 
             if (dist_to_center >= 3.0f && dist_to_center <= 10.0f) {
-                float blend = (dist_to_center - 3.0f) / 7.0f;
-                color = float3(1.0f, 0.9f * (1.0f - blend), 0.1f * (1.0f - blend));
+                // Calculate polar UVs
+                float rad_x = uniforms.disc_rot_x * M_PI_F / 180.0f;
+                float rad_z = uniforms.disc_rot_z * M_PI_F / 180.0f;
+
+                // Inverse Z rotation
+                float cos_z = cos(-rad_z);
+                float sin_z = sin(-rad_z);
+                float x1 = hit_point.x * cos_z - hit_point.y * sin_z;
+                float y1 = hit_point.x * sin_z + hit_point.y * cos_z;
+                float z1 = hit_point.z;
+
+                // Inverse X rotation
+                float cos_x = cos(-rad_x);
+                float sin_x = sin(-rad_x);
+                float x2 = x1;
+                float z2 = y1 * sin_x + z1 * cos_x;
+
+                // Now (x2, z2) are in the disc plane
+                float angle = atan2(z2, x2);
+
+                // Inside your kernel
+                float u = (angle + M_PI_F) / (2.0f * M_PI_F);
+                float v = (dist_to_center - 3.0f) / 7.0f;
+
+                constexpr sampler linearSampler(mag_filter::linear, min_filter::linear, address::repeat);
+                float noise_val = noise_texture.sample(linearSampler, float2(u, v)).r;
+
+                // --- 1. Physics-based Temperature & Density Falloff ---
+                // The center of an accretion disk is exponentially hotter and denser than the edge.
+                // We use inverse square-ish falloff for the base intensity.
+                float disk_temperature = 1.0f / (v * v * 5.0f + 0.8f);
+                float disk_density = smoothstep(1.0f, 0.9f, v) * smoothstep(0.0f, 0.05f, v); // Smooth fade at inner/outer edges
+
+                // --- 2. Doppler Beaming (The Secret Sauce) ---
+                // We need the ray direction to see if the disk is spinning towards or away from the camera.
+                float3 ray_dir = normalize(curr_pos3D - prev_pos3D);
+
+                // Calculate the velocity vector of the disk at the hit point.
+                // Assuming the disk spins around its normal.
+                float3 hit_dir_norm = normalize(hit_point);
+                float3 disk_velocity = normalize(cross(disc_normal, hit_dir_norm));
+
+                // How much of the velocity is pointed directly at the camera ray?
+                // (Positive if spinning towards camera, negative if away)
+                float doppler_factor = dot(disk_velocity, ray_dir);
+
+                // Amplify the doppler effect.
+                // 0.6 is an arbitrary "speed" parameter. Increase it for a more extreme lopsided look.
+                float beaming = pow(1.0f + doppler_factor * 0.5f, 1.5f);
+
+                // --- 3. Blackbody Color Mapping ---
+                // Map the temperature + noise to a specific color palette (White -> Yellow -> Orange -> Deep Red)
+                float final_temp = disk_temperature * (0.5f + noise_val * 0.5f) * beaming;
+
+                float3 color_inner = float3(1.0f, 0.95f, 0.8f); // Blinding white/yellow
+                float3 color_mid   = float3(1.0f, 0.4f, 0.05f); // Deep orange
+                float3 color_outer = float3(0.8f, 0.3f, 0.04f);  // Faint red/black
+
+                float3 base_color;
+                if (final_temp > 1.3f) { // if more than 1.3, white
+                    base_color = color_inner; // Clamp core to bright white
+                } else {
+                    // Smoothly interpolate from dark red to orange to white based on heat
+                    base_color = mix(color_outer, color_mid, smoothstep(0.0f, 0.4f, final_temp));
+                    base_color = mix(base_color, color_inner, smoothstep(0.6f, 1.0f, final_temp));
+                }
+
+                // --- 4. Final Output ---
+                // Combine color, density (fade at edges), beaming (brightness boost), and overall intensity
+                float final_intensity = final_temp * 2.5f;
+                color = base_color * final_intensity * disk_density;
+
                 break;
             }
         }

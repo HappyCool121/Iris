@@ -4,6 +4,7 @@
 #include <cstring>
 #include <glm/glm.hpp>
 #include <iostream>
+#include <random>
 
 // Metal headers
 #define NS_PRIVATE_IMPLEMENTATION
@@ -30,7 +31,7 @@ struct Uniforms {
 
 // global variables
 // camera settings
-glm::vec3 camera_pos = {0.0f, 0.0f, -18.0f};
+glm::vec3 camera_pos = {0.0f, 0.0f, -15.0f};
 
 // checkerboard texture wall
 glm::vec3 skybox_pos = {0.0f, 0.0f, 50.0f};
@@ -47,6 +48,7 @@ static MTL::CommandQueue *g_commandQueue = nullptr;
 static MTL::ComputePipelineState *g_pipelineState = nullptr;
 static MTL::Buffer *g_pixelBuffer = nullptr;
 static MTL::Buffer *g_uniformsBuffer = nullptr;
+static MTL::Texture *g_noiseTexture = nullptr;
 
 // ============================================================================
 // GPU Render — dispatches the render_black_hole compute kernel
@@ -68,10 +70,6 @@ void RenderImageGPU() {
   // Pre-compute disc normal
   float rad_x = disc_rot_x * 3.14159265359f / 180.0f;
   float rad_z = disc_rot_z * 3.14159265359f / 180.0f;
-
-
-  // no onnoonnoon
-
 
   // Analytically rotated normal (matches logic in Metal shader)
   glm::vec3 normal = glm::normalize(glm::vec3(
@@ -109,6 +107,7 @@ void RenderImageGPU() {
   encoder->setComputePipelineState(g_pipelineState);
   encoder->setBuffer(g_pixelBuffer, 0, 0);      // buffer(0) = pixels
   encoder->setBuffer(g_uniformsBuffer, 0, 1);   // buffer(1) = uniforms
+  encoder->setTexture(g_noiseTexture, 0);       // texture(0) = noise
 
   // 3. Calculate threadgroup and grid sizes
   MTL::Size gridSize = MTL::Size(WIDTH, HEIGHT, 1);
@@ -146,6 +145,87 @@ void RenderImageGPU() {
   std::chrono::duration<double, std::milli> duration = end - start;
   std::cout << "GPU Raytracing took: " << duration.count() << "ms"
             << std::endl;
+}
+
+
+// NOISE GENERATION (for accretion disc)
+// A better hash for smoother gradients
+float grad(int hash, float x, float y) {
+  int h = hash & 15;
+  float u = h < 8 ? x : y;
+  float v = h < 4 ? y : h == 12 || h == 14 ? x : 0;
+  return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+}
+
+float perlin(float x, float y) {
+  int ix = (int)floor(x);
+  int iy = (int)floor(y);
+  float fx = x - ix;
+  float fy = y - iy;
+  float ux = fx * fx * fx * (fx * (fx * 6 - 15) + 10); // Quintic smoothing
+  float uy = fy * fy * fy * (fy * (fy * 6 - 15) + 10);
+
+  // Simple deterministic hash
+  auto h = [](int x, int y) {
+    unsigned int a = x * 374761393 + y * 668265263;
+    a = (a ^ (a >> 13)) * 1274126177;
+    return (int)(a ^ (a >> 16));
+  };
+
+  float n00 = grad(h(ix, iy), fx, fy);
+  float n10 = grad(h(ix + 1, iy), fx - 1, fy);
+  float n01 = grad(h(ix, iy + 1), fx, fy - 1);
+  float n11 = grad(h(ix + 1, iy + 1), fx - 1, fy - 1);
+
+  return (1.0f - ux) * (1.0f - uy) * n00 + ux * (1.0f - uy) * n10 +
+         (1.0f - ux) * uy * n01 + ux * uy * n11;
+}
+
+// 2. Updated Texture Creation
+MTL::Texture *CreateNoiseTexture(MTL::Device *device) {
+  const int texSize = 512;
+  MTL::TextureDescriptor *desc = MTL::TextureDescriptor::texture2DDescriptor(
+      MTL::PixelFormatR8Unorm, texSize, texSize, false);
+  desc->setUsage(MTL::TextureUsageShaderRead);
+  MTL::Texture *texture = device->newTexture(desc);
+
+  std::vector<uint8_t> data(texSize * texSize);
+
+  // Inside CreateNoiseTexture loop:
+  for (int y = 0; y < texSize; ++y) {
+    for (int x = 0; x < texSize; ++x) {
+      float u = (float)x / texSize;
+      float v = (float)y / texSize;
+
+      // X = Angle (U), Y = Radius (V)
+      // Domain Warping: We want the rings to wobble slightly inward/outward
+      // Low U frequency stretches the noise around the disk.
+      // High V frequency creates multiple thin bands (rings).
+      float warp = perlin(u * 4.0f, v * 15.0f) * 0.1f;
+
+      // Primary Rings: Stretched heavily along the angle (U)
+      float val = perlin(u * 2.0f, (v + warp) * 40.0f);
+
+      // Secondary detail layer (broken up slightly more)
+      val += perlin(u * 6.0f, v * 80.0f) * 0.3f;
+
+      // Convert -1..1 to 0..1
+      val = (val / 1.3f) * 0.5f + 0.5f;
+
+      // Soften the contrast. The reference is a dense, opaque disk, not wispy
+      // fibers. A power of 1.5 to 2.0 keeps it smooth but defines the rings.
+      val = std::pow(std::max(0.0f, val), 1.8f);
+
+      data[y * texSize + x] =
+          static_cast<uint8_t>(std::clamp(val * 255.0f, 0.0f, 255.0f));
+    }
+  }
+
+  MTL::Region region = MTL::Region(0, 0, texSize, texSize);
+  texture->replaceRegion(region, 0, data.data(), texSize);
+
+  desc->release();
+  return texture;
 }
 
 int main(int argc, char *argv[]) {
@@ -206,6 +286,8 @@ int main(int argc, char *argv[]) {
       WIDTH * HEIGHT * sizeof(uint32_t), MTL::ResourceStorageModeShared);
   g_uniformsBuffer = g_device->newBuffer(
       sizeof(Uniforms), MTL::ResourceStorageModeShared);
+  // 6. Create Noise Texture
+  g_noiseTexture = CreateNoiseTexture(g_device);
 
   // Release intermediate objects
   kernelFunction->release();
@@ -303,6 +385,7 @@ int main(int argc, char *argv[]) {
   g_pixelBuffer->release();
   g_uniformsBuffer->release();
   g_pipelineState->release();
+  g_noiseTexture->release();
   g_commandQueue->release();
   g_device->release();
 
