@@ -1,5 +1,10 @@
 # IRIS by imari
-### A real time GPU accelerated render engine utilizing MacOS's Metal API for visualizing non-rotating Shwarzchild black holes.
+A real time GPU-accelerated render engine utilizing MacOS's Metal API for visualizing non-rotating Shwarzchild black holes. Uses a Range-Kutta solver (ran on GPU kernels) for the simplified null geodesic equation to compute non linear light paths. 
+
+### Average render time on M4: 
+~14ms per frame (~70 fps)
+1000 x 800 screen resolution (~8ms per frame for 800 x 600)
+0.05 rad step size, 1000 steps
 
 # How to use
 The code works right out the box as it contains all the relavant libraries and dependencies needed. However, this 
