@@ -10,21 +10,25 @@ struct Uniforms {
     uint height;
     
     // packed_float3 avoids 16-byte alignment padding issues with C++
-    packed_float3 camera_pos; 
-    
+    packed_float3 camera_pos;
+
     // accretion disk rotation angles
     float disc_rot_x;
     float disc_rot_z;
     packed_float3 disc_normal;
 
+    // sun position
     packed_float3 sun_pos;
     float sun_radius;
+
+    packed_float3 cam_right;
+    packed_float3 cam_up;
+    packed_float3 cam_forward;
 };
 
+// Procedural checkerboard skybox (Replaces your C++ black_skybox function)
 float3 sample_skybox(float3 dir) {
-    // Pure black void
-    float3 color = float3(0.0f);
-    return color;
+    return float3(0.05f);
 }
 
 kernel void render_black_hole(
@@ -43,7 +47,12 @@ kernel void render_black_hole(
     float screen_y = 1.0f - 2.0f * (gid.y + 0.5f) / uniforms.height;
 
     float3 camera_pos = uniforms.camera_pos;
-    float3 ray_d = normalize(float3(screen_x, screen_y, 1.0f));
+    float3 cam_right = uniforms.cam_right;
+    float3 cam_up = uniforms.cam_up;
+    float3 cam_forward = uniforms.cam_forward;
+
+    // focal_length of 1.0f roughly matches FOV
+    float3 ray_d = normalize(screen_x * cam_right + screen_y * cam_up + 1.0f * cam_forward);
 
     // 2. Define basis vectors for 2D Cartesian plane
     float3 N = cross(camera_pos, ray_d);
@@ -71,16 +80,16 @@ kernel void render_black_hole(
     // 5. Setup Loop Variables
     float3 prev_pos3D = camera_pos;
     float d_phi = 0.05f;
-    int max_steps = 500;
-    
+    int max_steps = 1000;
+
     float3 disc_normal = uniforms.disc_normal;
 
     // initialize pixel color to black
-    float3 color = float3(0.0f, 0.0f, 0.0f); 
+    float3 color = float3(0.0f, 0.0f, 0.0f);
 
     // 6. RK4 step process
     for (int curr_steps = 0; curr_steps < max_steps; curr_steps++) {
-        
+
         // RK4 Integration Step (Solving: v' = 1.5 * u^2 - u)
         float k1_u = v;
         float k1_v = 1.5f * u * u - u;
@@ -133,7 +142,7 @@ kernel void render_black_hole(
 
             if (dist_to_center >= 3.0f && dist_to_center <= 10.0f) {
                 float blend = (dist_to_center - 3.0f) / 7.0f;
-                color = float3(1.0f, 0.6f * (1.0f - blend), 0.1f * (1.0f - blend));
+                color = float3(1.0f, 0.9f * (1.0f - blend), 0.1f * (1.0f - blend));
                 break;
             }
         }
@@ -146,7 +155,7 @@ kernel void render_black_hole(
         float dist_curr = length(curr_pos3D - sun_pos) - sun_radius;
 
         if (dist_prev * dist_curr < 0.0f) {
-            color = float3(0.67f, 0.85f, 0.9f); // White/Yellow sun
+            color = float3(0.9f, 0.95f, 0.97f); // White/Yellow sun
             break;
         }
 

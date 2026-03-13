@@ -1,7 +1,3 @@
-//
-// Created by Imari on 13/3/26.
-//
-
 #include "application.h"
 #include "dataTypes.h"
 #include <chrono>
@@ -15,9 +11,6 @@
 #define MTL_PRIVATE_IMPLEMENTATION
 #include <Metal/Metal.hpp>
 
-const int TARGET_FPS = 60;
-const int FRAME_DELAY = 1000 / TARGET_FPS;
-
 // ============================================================================
 // Uniforms struct — must match the Metal shader's Uniforms exactly
 // ============================================================================
@@ -25,17 +18,15 @@ struct Uniforms {
   uint32_t width;
   uint32_t height;
   float camera_pos[3]; // packed_float3 compatible
-
-  // accretion disc settings
   float disc_rot_x;
   float disc_rot_z;
   float disc_normal[3]; // Pre-computed normal (packed_float3 compatible)
-
-  // sun settings
   float sun_pos[3];
   float sun_radius;
+  float cam_right[3];
+  float cam_up[3];
+  float cam_forward[3];
 };
-
 
 // global variables
 // camera settings
@@ -73,14 +64,14 @@ void RenderImageGPU() {
   uniforms->camera_pos[2] = camera_pos.z;
   uniforms->disc_rot_x = disc_rot_x;
   uniforms->disc_rot_z = disc_rot_z;
-  uniforms->sun_pos[0] = sun_pos_x;
-  uniforms->sun_pos[1] = sun_pos_y;
-  uniforms->sun_pos[2] = sun_pos_z;
-  uniforms->sun_radius = sun_radius;
 
   // Pre-compute disc normal
   float rad_x = disc_rot_x * 3.14159265359f / 180.0f;
   float rad_z = disc_rot_z * 3.14159265359f / 180.0f;
+
+
+  // no onnoonnoon
+
 
   // Analytically rotated normal (matches logic in Metal shader)
   glm::vec3 normal = glm::normalize(glm::vec3(
@@ -92,6 +83,23 @@ void RenderImageGPU() {
   uniforms->disc_normal[0] = normal.x;
   uniforms->disc_normal[1] = normal.y;
   uniforms->disc_normal[2] = normal.z;
+
+  uniforms->sun_pos[0] = sun_pos_x;
+  uniforms->sun_pos[1] = sun_pos_y;
+  uniforms->sun_pos[2] = sun_pos_z;
+  uniforms->sun_radius = sun_radius;
+
+  uniforms->cam_right[0] = cam_right.x;
+  uniforms->cam_right[1] = cam_right.y;
+  uniforms->cam_right[2] = cam_right.z;
+
+  uniforms->cam_up[0] = cam_up.x;
+  uniforms->cam_up[1] = cam_up.y;
+  uniforms->cam_up[2] = cam_up.z;
+
+  uniforms->cam_forward[0] = cam_forward.x;
+  uniforms->cam_forward[1] = cam_forward.y;
+  uniforms->cam_forward[2] = cam_forward.z;
 
   // 2. Create command buffer and compute encoder
   MTL::CommandBuffer *commandBuffer = g_commandQueue->commandBuffer();
@@ -203,7 +211,7 @@ int main(int argc, char *argv[]) {
   kernelFunction->release();
   defaultLibrary->release();
 
-  std::cout << "--- blackholev3 start ---" << std::endl;
+  std::cout << "--- blackholev1 start ---" << std::endl;
   std::cout << "Metal GPU pipeline ready." << std::endl;
 
   // 1. INIT SDL and IMGUI
@@ -222,15 +230,39 @@ int main(int argc, char *argv[]) {
   SDL_Event event;
 
   while (running) {
+    bool inputChanged = false;
     while (SDL_PollEvent(&event)) {
       ImGui_ImplSDL2_ProcessEvent(&event);
       if (event.type == SDL_QUIT)
         running = false;
+    }
 
-      // start render
-      if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_r) {
-        RenderImageGPU();
-      }
+    // 1. Handle Keyboard Input for Camera
+    const Uint8* state = SDL_GetKeyboardState(NULL);
+    float moveSpeed = 0.5f;
+    float rotSpeed = 0.05f;
+
+    if (state[SDL_SCANCODE_W]) { camera_pos.y += moveSpeed; inputChanged = true; }
+    if (state[SDL_SCANCODE_S]) { camera_pos.y -= moveSpeed; inputChanged = true; }
+    if (state[SDL_SCANCODE_A]) { camera_pos.x -= moveSpeed; inputChanged = true; }
+    if (state[SDL_SCANCODE_D]) { camera_pos.x += moveSpeed; inputChanged = true; }
+
+    if (state[SDL_SCANCODE_UP])    { camera_pitch += rotSpeed; inputChanged = true; }
+    if (state[SDL_SCANCODE_DOWN])  { camera_pitch -= rotSpeed; inputChanged = true; }
+    if (state[SDL_SCANCODE_LEFT])  { camera_yaw -= rotSpeed; inputChanged = true; }
+    if (state[SDL_SCANCODE_RIGHT]) { camera_yaw += rotSpeed; inputChanged = true; }
+
+    if (inputChanged) {
+      // Update basis vectors
+      cam_forward.x = cos(camera_yaw) * cos(camera_pitch);
+      cam_forward.y = sin(camera_pitch);
+      cam_forward.z = sin(camera_yaw) * cos(camera_pitch);
+      cam_forward = glm::normalize(cam_forward);
+
+      cam_right = glm::normalize(glm::cross(glm::vec3(0, 1, 0), cam_forward));
+      cam_up = glm::cross(cam_forward, cam_right);
+
+      toRender = true;
     }
 
     ImGui_ImplSDLRenderer2_NewFrame();
@@ -238,25 +270,25 @@ int main(int argc, char *argv[]) {
     ImGui::NewFrame();
 
     ImGui::Begin("Status");
-    ImGui::Text("blackholev3");
-
-    if (ImGui::Button("Render image (R)")) {
-      RenderImageGPU();
-    }
+    ImGui::Text("blackholev1");
 
     ImGui::Separator();
     ImGui::Text("Accretion Disc Rotation");
-    ImGui::SliderFloat("Rotation X", &disc_rot_x, -180.0f, 180.0f);
-    ImGui::SliderFloat("Rotation Z", &disc_rot_z, -180.0f, 180.0f);
+    if (ImGui::SliderFloat("Rotation X", &disc_rot_x, -180.0f, 180.0f)) toRender = true;
+    if (ImGui::SliderFloat("Rotation Z", &disc_rot_z, -180.0f, 180.0f)) toRender = true;
 
     ImGui::Separator();
     ImGui::Text("Sun Settings");
-    ImGui::SliderFloat("Sun X", &sun_pos_x, -50.0f, 50.0f);
-    ImGui::SliderFloat("Sun Y", &sun_pos_y, -50.0f, 50.0f);
-    ImGui::SliderFloat("Sun Z", &sun_pos_z, -50.0f, 50.0f);
-    ImGui::SliderFloat("Sun Radius", &sun_radius, 0.1f, 10.0f);
-
+    if (ImGui::SliderFloat("Sun X", &sun_pos_x, -50.0f, 50.0f)) toRender = true;
+    if (ImGui::SliderFloat("Sun Y", &sun_pos_y, -50.0f, 50.0f)) toRender = true;
+    if (ImGui::SliderFloat("Sun Z", &sun_pos_z, -50.0f, 50.0f)) toRender = true;
+    if (ImGui::SliderFloat("Sun Radius", &sun_radius, 0.1f, 10.0f)) toRender = true;
     ImGui::End();
+
+    if (toRender) {
+      RenderImageGPU();
+      toRender = false;
+    }
 
     ImGui::Render();
     SDL_SetRenderDrawColor(app.renderer, 0, 0, 0, 255);

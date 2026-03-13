@@ -25,6 +25,13 @@ inline float cameraDist = 1.0f;
 inline const int WIDTH = 800;
 inline const int HEIGHT = 600;
 
+// camera orientation
+inline float camera_yaw = 1.5708f; // Pointing towards +Z (PI/2)
+inline float camera_pitch = 0.0f;
+inline glm::vec3 cam_forward = {0, 0, 1};
+inline glm::vec3 cam_right = {1, 0, 0};
+inline glm::vec3 cam_up = {0, 1, 0};
+
 inline float cameraFOV = 90.0f;
 inline float FOVscale =
     (HEIGHT / 2.0f) / std::tan(cameraFOV * 0.5f * 3.14159f / 180.0f);
