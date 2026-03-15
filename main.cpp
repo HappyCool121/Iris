@@ -12,6 +12,12 @@
 #define MTL_PRIVATE_IMPLEMENTATION
 #include <Metal/Metal.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <filesystem>
+
+#include "stb_image.h"
+
+
 // ============================================================================
 // Uniforms struct — must match the Metal shader's Uniforms exactly
 // ============================================================================
@@ -31,7 +37,7 @@ struct Uniforms {
 
 // global variables
 // camera settings
-glm::vec3 camera_pos = {0.0f, 0.0f, -15.0f};
+glm::vec3 camera_pos = {0.0f, 0.0f, -14.0f};
 
 // checkerboard texture wall
 glm::vec3 skybox_pos = {0.0f, 0.0f, 50.0f};
@@ -49,6 +55,7 @@ static MTL::ComputePipelineState *g_pipelineState = nullptr;
 static MTL::Buffer *g_pixelBuffer = nullptr;
 static MTL::Buffer *g_uniformsBuffer = nullptr;
 static MTL::Texture *g_noiseTexture = nullptr;
+static MTL::Texture *g_skyboxTexture = nullptr;
 
 // ============================================================================
 // GPU Render — dispatches the render_black_hole compute kernel
@@ -108,6 +115,7 @@ void RenderImageGPU() {
   encoder->setBuffer(g_pixelBuffer, 0, 0);      // buffer(0) = pixels
   encoder->setBuffer(g_uniformsBuffer, 0, 1);   // buffer(1) = uniforms
   encoder->setTexture(g_noiseTexture, 0);       // texture(0) = noise
+  encoder->setTexture(g_skyboxTexture, 1);    // texture(1) = skybox
 
   // 3. Calculate threadgroup and grid sizes
   MTL::Size gridSize = MTL::Size(WIDTH, HEIGHT, 1);
@@ -228,6 +236,29 @@ MTL::Texture *CreateNoiseTexture(MTL::Device *device) {
   return texture;
 }
 
+MTL::Texture *CreateSkyboxTexture(MTL::Device *device, const char *path) {
+  int width, height, channels;
+  unsigned char *data = stbi_load(path, &width, &height, &channels, 4);
+  if (!data) {
+    std::cerr << "Failed to load image: " << path << std::endl;
+    return nullptr;
+  }
+
+  MTL::TextureDescriptor *desc = MTL::TextureDescriptor::texture2DDescriptor(
+      MTL::PixelFormatRGBA8Unorm, width, height, false);
+  desc->setUsage(MTL::TextureUsageShaderRead);
+  MTL::Texture *texture = device->newTexture(desc);
+
+  MTL::Region region = MTL::Region(0, 0, width, height);
+  texture->replaceRegion(region, 0, data, width * 4);
+
+  stbi_image_free(data);
+  desc->release();
+  return texture;
+
+}
+
+
 int main(int argc, char *argv[]) {
 
   // --------------------------------------------------------------------------
@@ -286,8 +317,37 @@ int main(int argc, char *argv[]) {
       WIDTH * HEIGHT * sizeof(uint32_t), MTL::ResourceStorageModeShared);
   g_uniformsBuffer = g_device->newBuffer(
       sizeof(Uniforms), MTL::ResourceStorageModeShared);
-  // 6. Create Noise Texture
+
+  // 6. Create Textures
   g_noiseTexture = CreateNoiseTexture(g_device);
+
+  // Try multiple paths for the skybox image
+  const char *skyboxPaths[] = {"images/galaxy_bg.jpg",
+                               "../images/galaxy_bg.jpg",
+                               "../../images/galaxy_bg.jpg"};
+
+  for (const char *path : skyboxPaths) {
+    g_skyboxTexture = CreateSkyboxTexture(g_device, path);
+    if (g_skyboxTexture) {
+      std::cout << "Successfully loaded skybox from: " << path << std::endl;
+      break;
+    }
+  }
+
+  if (!g_skyboxTexture) {
+    std::cerr << "Warning: Falling back to procedural skybox if possible, "
+                 "but kernel expects texture(1)."
+              << std::endl;
+    // We should probably create a dummy texture if loading fails to avoid GPU
+    // crashes
+    uint32_t dummy = 0xFF000000;
+    MTL::TextureDescriptor *desc = MTL::TextureDescriptor::texture2DDescriptor(
+        MTL::PixelFormatRGBA8Unorm, 1, 1, false);
+    g_skyboxTexture = g_device->newTexture(desc);
+    g_skyboxTexture->replaceRegion(MTL::Region(0, 0, 1, 1), 0, &dummy, 4);
+    desc->release();
+  }
+
 
   // Release intermediate objects
   kernelFunction->release();
@@ -393,6 +453,8 @@ int main(int argc, char *argv[]) {
   ImGui_ImplSDL2_Shutdown();
   ImGui::DestroyContext();
   SDL_DestroyTexture(app.texture);
+  if (g_skyboxTexture)
+    g_skyboxTexture->release();
   SDL_DestroyRenderer(app.renderer);
   SDL_DestroyWindow(app.window);
   SDL_Quit();

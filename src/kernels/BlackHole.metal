@@ -27,14 +27,26 @@ struct Uniforms {
 };
 
 // Procedural checkerboard skybox (Replaces your C++ black_skybox function)
-float3 sample_skybox(float3 dir) {
-    return float3(0.05f);
+//float3 sample_skybox(float3 dir) {
+//    return float3(0.05f);
+//}
+
+// Image-based skybox
+float3 sample_skybox(float3 dir, texture2d<float, access::sample> skybox_texture) {
+    // Spherical UV mapping
+    float u = atan2(dir.z, dir.x) / (2.0f * M_PI_F) + 0.5f;
+    float v = asin(dir.y) / M_PI_F + 0.5f;
+
+    constexpr sampler linearSampler(mag_filter::linear, min_filter::linear, address::repeat);
+    float3 color = skybox_texture.sample(linearSampler, float2(u, v)).rgb;
+    return color * exp2(-1.0f);
 }
 
 kernel void render_black_hole(
     device uint* pixels [[buffer(0)]],
     constant Uniforms& uniforms [[buffer(1)]],
     texture2d<float, access::sample> noise_texture [[texture(0)]],
+    texture2d<float, access::sample> skybox_texture [[texture(1)]],
     uint2 gid [[thread_position_in_grid]]
 ) {
     // Prevent out-of-bounds execution
@@ -128,7 +140,8 @@ kernel void render_black_hole(
         // B. Escaped to infinity
         if (r > 100.0f) {
             float3 final_dir = normalize(curr_pos3D - prev_pos3D);
-            color = sample_skybox(final_dir);
+            // color = sample_skybox(final_dir);
+            color = sample_skybox(final_dir, skybox_texture);
             break;
         }
 

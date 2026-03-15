@@ -62,3 +62,10 @@ target_link_libraries(blackHolev3
         ${FOUNDATION_FRAMEWORK}
         ${QUARTZ_FRAMEWORK}
 )
+
+add_custom_command(TARGET blackHolev3 POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/images"
+        "${CMAKE_CURRENT_BINARY_DIR}/images"
+        COMMENT "Copying assets to build directory"
+)

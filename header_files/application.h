@@ -22,8 +22,8 @@
 
 // camera settings
 inline float cameraDist = 1.0f;
-inline const int WIDTH = 800;
-inline const int HEIGHT = 600;
+inline const int WIDTH = 1000;
+inline const int HEIGHT = 800;
 
 // camera orientation
 inline float camera_yaw = 1.5708f; // Pointing towards +Z (PI/2)
@@ -37,11 +37,11 @@ inline float FOVscale =
     (HEIGHT / 2.0f) / std::tan(cameraFOV * 0.5f * 3.14159f / 180.0f);
 
 // accretion disc settings
-inline float disc_rot_x = 0.0f;
-inline float disc_rot_z = 0.0f;
+inline float disc_rot_x = -4.0f;
+inline float disc_rot_z = 20.0f;
 
 // sun settings
-inline float sun_pos_x = 10.0f;
+inline float sun_pos_x = 50.0f;
 inline float sun_pos_y = 5.0f;
 inline float sun_pos_z = 10.0f;
 inline float sun_radius = 2.0f;
