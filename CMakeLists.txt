@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.1)
-project(blackHolev3)
+project(Iris)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -40,13 +40,13 @@ set(IMGUI_SOURCES
         header_files/application.h
 )
 
-add_executable(blackHolev3
+add_executable(Iris
         main.cpp
         ${IMGUI_SOURCES}
         ${METAL_LIB}
 )
 
-target_include_directories(blackHolev3 PUBLIC
+target_include_directories(Iris PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/header_files"
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
         "${CMAKE_CURRENT_SOURCE_DIR}/metal-cpp" # metal-cpp path
@@ -54,7 +54,7 @@ target_include_directories(blackHolev3 PUBLIC
         imgui/backends
 )
 
-target_link_libraries(blackHolev3
+target_link_libraries(Iris
         PRIVATE
         SDL2::SDL2
         glm::glm
@@ -63,7 +63,7 @@ target_link_libraries(blackHolev3
         ${QUARTZ_FRAMEWORK}
 )
 
-add_custom_command(TARGET blackHolev3 POST_BUILD
+add_custom_command(TARGET Iris POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/images"
         "${CMAKE_CURRENT_BINARY_DIR}/images"
