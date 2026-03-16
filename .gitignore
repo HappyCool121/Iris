@@ -25,3 +25,7 @@ cmake-build-release/
 
 # OS generated files
 .DS_Store
+
+
+build/
+bin/

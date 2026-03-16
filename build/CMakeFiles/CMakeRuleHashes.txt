@@ -1,2 +1,0 @@
-# Hashes of file build rules.
-6ff27b97b8c7045d675ecbaffc7b877d default.metallib
