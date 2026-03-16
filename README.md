@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # IRIS by imari
 A real time GPU-accelerated render engine utilizing MacOS's Metal API for visualizing non-rotating Shwarzchild black holes. Uses a Range-Kutta solver (ran on GPU kernels) for the simplified null geodesic equation to compute non linear light paths.
 
