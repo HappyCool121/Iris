@@ -1,3 +1,1 @@
-remote_theme: jekyll-theme-minimal
-title: Iris
-description: A real time non-rotating black hole renderer
+theme: jekyll-theme-minimal
