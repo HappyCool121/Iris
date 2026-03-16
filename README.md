@@ -25,9 +25,6 @@ will significantly reduce the performance of the renderer, and may no longer wor
 
 ## The physics (and the math)
 
-<<<<<<< HEAD
-## GPU accelerated raytracing with Metalcpp
-=======
 At the core of IRIS is the simulation of light paths in the curved spacetime around a **Schwarzschild Black Hole**. Unlike traditional raytracers where light travels in straight lines, IRIS computes the **null geodesics**—the paths that light follows—which are bent by the black hole's gravity.
 
 ### 1. The Schwarzschild Metric
@@ -67,4 +64,3 @@ The wispy, organic look of the disc is generated via **Domain-Warped Perlin Nois
 
 ### 3. Environment Mapping
 Rays that escape the black hole's gravity sample an **Equirectangular Skybox** (e.g., a high-resolution Milky Way texture). Spherical UV mapping ensures that the stars and nebulae appear correctly distorted by the gravitational lensing.
->>>>>>> 3dbd938 (galaxy skybox using custom image + md file draft 2)

@@ -384,27 +384,50 @@ int main(int argc, char *argv[]) {
     float moveSpeed = 0.5f;
     float rotSpeed = 0.05f;
 
-    if (state[SDL_SCANCODE_W]) { camera_pos.y += moveSpeed; inputChanged = true; }
-    if (state[SDL_SCANCODE_S]) { camera_pos.y -= moveSpeed; inputChanged = true; }
-    if (state[SDL_SCANCODE_A]) { camera_pos.x -= moveSpeed; inputChanged = true; }
-    if (state[SDL_SCANCODE_D]) { camera_pos.x += moveSpeed; inputChanged = true; }
+    if (cameraMode == CameraMode::ORBIT) {
+        if (state[SDL_SCANCODE_A]) { orbit_yaw -= rotSpeed; inputChanged = true; }
+        if (state[SDL_SCANCODE_D]) { orbit_yaw += rotSpeed; inputChanged = true; }
+        if (state[SDL_SCANCODE_W]) { orbit_radius -= moveSpeed; inputChanged = true; }
+        if (state[SDL_SCANCODE_S]) { orbit_radius += moveSpeed; inputChanged = true; }
 
-    if (state[SDL_SCANCODE_UP])    { camera_pitch += rotSpeed; inputChanged = true; }
-    if (state[SDL_SCANCODE_DOWN])  { camera_pitch -= rotSpeed; inputChanged = true; }
-    if (state[SDL_SCANCODE_LEFT])  { camera_yaw -= rotSpeed; inputChanged = true; }
-    if (state[SDL_SCANCODE_RIGHT]) { camera_yaw += rotSpeed; inputChanged = true; }
+        if (orbit_radius < 0.1f) orbit_radius = 0.1f;
 
-    if (inputChanged) {
-      // Update basis vectors
-      cam_forward.x = cos(camera_yaw) * cos(camera_pitch);
-      cam_forward.y = sin(camera_pitch);
-      cam_forward.z = sin(camera_yaw) * cos(camera_pitch);
-      cam_forward = glm::normalize(cam_forward);
+        if (inputChanged) {
+            // Calculate camera position in spherical coordinates (orbiting origin)
+            camera_pos.x = orbit_radius * sin(orbit_yaw) * cos(orbit_pitch);
+            camera_pos.y = orbit_radius * sin(orbit_pitch);
+            camera_pos.z = orbit_radius * cos(orbit_yaw) * cos(orbit_pitch);
 
-      cam_right = glm::normalize(glm::cross(glm::vec3(0, 1, 0), cam_forward));
-      cam_up = glm::cross(cam_forward, cam_right);
+            // Point at origin
+            cam_forward = glm::normalize(bh_pos - camera_pos);
+            cam_right = glm::normalize(glm::cross(glm::vec3(0, 1, 0), cam_forward));
+            cam_up = glm::cross(cam_forward, cam_right);
 
-      toRender = true;
+            toRender = true;
+        }
+    } else {
+        if (state[SDL_SCANCODE_W]) { camera_pos.y += moveSpeed; inputChanged = true; }
+        if (state[SDL_SCANCODE_S]) { camera_pos.y -= moveSpeed; inputChanged = true; }
+        if (state[SDL_SCANCODE_A]) { camera_pos.x -= moveSpeed; inputChanged = true; }
+        if (state[SDL_SCANCODE_D]) { camera_pos.x += moveSpeed; inputChanged = true; }
+
+        if (state[SDL_SCANCODE_UP])    { camera_pitch += rotSpeed; inputChanged = true; }
+        if (state[SDL_SCANCODE_DOWN])  { camera_pitch -= rotSpeed; inputChanged = true; }
+        if (state[SDL_SCANCODE_LEFT])  { camera_yaw -= rotSpeed; inputChanged = true; }
+        if (state[SDL_SCANCODE_RIGHT]) { camera_yaw += rotSpeed; inputChanged = true; }
+
+        if (inputChanged) {
+          // Update basis vectors
+          cam_forward.x = cos(camera_yaw) * cos(camera_pitch);
+          cam_forward.y = sin(camera_pitch);
+          cam_forward.z = sin(camera_yaw) * cos(camera_pitch);
+          cam_forward = glm::normalize(cam_forward);
+
+          cam_right = glm::normalize(glm::cross(glm::vec3(0, 1, 0), cam_forward));
+          cam_up = glm::cross(cam_forward, cam_right);
+
+          toRender = true;
+        }
     }
 
     ImGui_ImplSDLRenderer2_NewFrame();
@@ -413,6 +436,22 @@ int main(int argc, char *argv[]) {
 
     ImGui::Begin("Status");
     ImGui::Text("blackholev1");
+
+    ImGui::Separator();
+    ImGui::Text("Camera Mode");
+    if (ImGui::RadioButton("Original", cameraMode == CameraMode::ORIGINAL)) {
+        cameraMode = CameraMode::ORIGINAL;
+        toRender = true;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Orbit", cameraMode == CameraMode::ORBIT)) {
+        cameraMode = CameraMode::ORBIT;
+        // Initialize orbit parameters from current position if switching
+        orbit_radius = glm::length(camera_pos - bh_pos);
+        orbit_yaw = atan2(camera_pos.x, camera_pos.z);
+        orbit_pitch = asin(camera_pos.y / orbit_radius);
+        toRender = true;
+    }
 
     ImGui::Separator();
     ImGui::Text("Accretion Disc Rotation");

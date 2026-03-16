@@ -20,8 +20,14 @@
 // will handle all variables and objects in the scene, including the render
 // settings serves as the orchestrator for the whole application
 
-// camera settings
-inline float cameraDist = 1.0f;
+enum class CameraMode { ORIGINAL, ORBIT };
+inline CameraMode cameraMode = CameraMode::ORIGINAL;
+
+// orbit settings
+inline float orbit_radius = 14.0f;
+inline float orbit_yaw = 0.0f;
+inline float orbit_pitch = 0.0f;
+
 inline const int WIDTH = 1000;
 inline const int HEIGHT = 800;
 
