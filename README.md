@@ -36,8 +36,9 @@ To solve for the light path efficiently, we transform the trajectory into polar 
 $$\frac{d^2u}{d\phi^2} + u = \frac{3}{2}u^2$$
 
 Defining $v = \frac{du}{d\phi}$, we can break this down into a system of two first-order equations:
-- $\frac{du}{d\phi} = v$
-- $\frac{dv}{d\phi} = \frac{3}{2}u^2 - u$
+
+- $$\frac{du}{d\phi} = v$$
+- $$\frac{dv}{d\phi} = \frac{3}{2}u^2 - u$$
 
 ### 3. Numerical Integration (RK4)
 IRIS uses the **Runge-Kutta 4th Order (RK4)** method to solve this system. For every pixel, the GPU integrates the ray's path step-by-step.
