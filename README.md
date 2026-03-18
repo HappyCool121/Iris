@@ -22,88 +22,106 @@ the step size is 0.05 radians, with 1000 steps, which yields an accurate render 
 ## The physics (and the math)
 
 At the core of Iris is the simulation of light paths in the curved spacetime around a Schwarzschild Black Hole. Unlike traditional raytracers where light travels in straight lines, Iris computes the null geodesics, which are the curved paths that light follows around the black hole due to its gravity. 
+# Derivation of the Binet Equation for Light Paths around a non-rotating Shwarzschild Black Hole
 
-### 1. The Schwarzschild Metric
-The engine models a static, non-rotating, spherically symmetric black hole described by the Schwarzschild metric in coordinates $(t, r, \theta, \phi)$, given by 
-
-$$ds^2 = -\left(1 - \frac{2m}{r}\right)c^2 dt^2 + \left(1 - \frac{2m}{r}\right)^{-1} dr^2 + r^2(d\theta^2 + \sin^2\theta d\phi^2)$$
-
-For light rays, the spacetime interval is zero ($ds^2 = 0$). Due to spherical symmetry, we can restrict the motion to the equatorial plane ($\theta = \pi/2, d\theta = 0$). The metric simplifies to:
-
-$$0 = -\left(1 - \frac{2m}{r}\right)c^2 dt^2 + \left(1 - \frac{2m}{r}\right)^{-1} dr^2 + r^2 d\phi^2 \quad \dots (1)$$
-
-# Derivation of the Binet Equation for Light Paths in Schwarzschild Spacetime
-
-To derive the Binet equation for light (null geodesics) around a non-rotating Schwarzschild black hole, we start from the metric and use the constants of motion.
+We start from the Shwarzschild metric, define the constants of motion, and use symmetries to reduce it to the Binet Equation.
 
 ---
 
 ## 1. The Schwarzschild Metric
-The Schwarzschild metric in coordinates $$(t, r, \theta, \phi)$$ is given by:
 
-$$ds^2 = -\left(1 - \frac{2m}{r}\right)c^2 dt^2 + \left(1 - \frac{2m}{r}\right)^{-1} dr^2 + r^2(d\theta^2 + \sin^2\theta d\phi^2)$$
+The Schwarzschild metric in spherical coordinates $(t, r, \theta, \phi)$ with the black hole at the origin is given by
 
-where $$m = \frac{GM}{c^2}$$ is the geometric mass.
+$$
+ds^2 = -\left(1 - \frac{2m}{r}\right)c^2 dt^2 + \left(1 - \frac{2m}{r}\right)^{-1} dr^2 + r^2(d\theta^2 + \sin^2\theta d\phi^2)
+$$
+
+where $m = \frac{GM}{c^2}$ is the geometric mass.
 
 ## 2. Constraints for Null Geodesics
-For light rays, the spacetime interval is zero ($$ds^2 = 0$$). Due to spherical symmetry, we can restrict the motion to the equatorial plane ($$\theta = \pi/2, d\theta = 0$$). The metric simplifies to:
 
-$$0 = -\left(1 - \frac{2m}{r}\right)c^2 dt^2 + \left(1 - \frac{2m}{r}\right)^{-1} dr^2 + r^2 d\phi^2 \quad \dots (1)$$
+For light rays (photons with speed $c$), the spacetime interval is zero ($ds^2 = 0$). Due to spherical symmetry, we can restrict the motion to an equatorial plane ($\theta = \pi/2, d\theta = 0$). Then the metric simplifies to
+
+$$
+0 = -\left(1 - \frac{2m}{r}\right)c^2 dt^2 + \left(1 - \frac{2m}{r}\right)^{-1} dr^2 + r^2 d\phi^2 \quad \dots \ (1)
+$$
 
 ## 3. Constants of Motion
-Because the metric is independent of $$t$$and$$\phi$$, we have two conserved quantities along the geodesic, associated with an affine parameter $$\lambda$$:
 
-* **Energy ($$e$$):** From the Killing vector $$\xi = \partial_t$$:
-    $$\left(1 - \frac{2m}{r}\right) \frac{dt}{d\lambda} = e$$
-* **Angular Momentum ($$L$$):** From the Killing vector $$\eta = \partial_\phi$$:
-    $$r^2 \frac{d\phi}{d\lambda} = L$$
+Because the metric is independent of $t$ and $\phi$, we have two conserved quantities along the geodesic, associated with an affine parameter $\lambda$:
 
-## 4. The Radial Equation
-Substituting the expressions for $$\frac{dt}{d\lambda}$$and$$\frac{d\phi}{d\lambda}$$ back into Equation (1):
+- **Energy (**$e$**):** From the Killing vector $\xi = \partial_t$:
 
-$$0 = -\left(1 - \frac{2m}{r}\right)c^2 \left[ \frac{e}{1 - 2m/r} \right]^2 + \left(1 - \frac{2m}{r}\right)^{-1} \left( \frac{dr}{d\lambda} \right)^2 + r^2 \left( \frac{L}{r^2} \right)^2$$
+$$
+\left(1 - \frac{2m}{r}\right) \frac{dt}{d\lambda} = e
+$$
 
-Multiplying through by $$(1 - 2m/r)$$ and rearranging for the radial derivative:
+- **Angular Momentum (**$L$**):** From the Killing vector $\eta = \partial_\phi$:
 
-$$\left( \frac{dr}{d\lambda} \right)^2 = e^2 c^2 - \frac{L^2}{r^2} \left( 1 - \frac{2m}{r} \right) \quad \dots (2)$$
+$$
+r^2 \frac{d\phi}{d\lambda} = L
+$$
+
+Substituting the expressions for $\frac{dt}{d\lambda}$ and $\frac{d\phi}{d\lambda}$ back into (1), 
+
+$$
+0 = -\left(1 - \frac{2m}{r}\right)c^2 \left[ \frac{e}{1 - 2m/r} \right]^2 + \left(1 - \frac{2m}{r}\right)^{-1} \left( \frac{dr}{d\lambda} \right)^2 + r^2 \left( \frac{L}{r^2} \right)^2
+$$
+
+Multiplying through by $(1 - 2m/r)$ and rearranging for the radial derivative:
+
+$$
+\left( \frac{dr}{d\lambda} \right)^2 = e^2 c^2 - \frac{L^2}{r^2} \left( 1 - \frac{2m}{r} \right) \quad \dots \ (2)
+$$
 
 ## 5. Variable Substitution (Binet Transformation)
-To find the shape of the orbit $$u(\phi)$$, we define $$u = 1/r$$. Using the chain rule:
 
-$$\frac{dr}{d\lambda} = \frac{dr}{d\phi} \frac{d\phi}{d\lambda} = \frac{dr}{d\phi} \left( \frac{L}{r^2} \right) = \frac{dr}{d\phi} (L u^2)$$
+To find the shape of the orbit $u(\phi)$, we define $u = 1/r$. Using the chain rule,
 
-Since $$r = 1/u$$, then $$\frac{dr}{d\phi} = -\frac{1}{u^2} \frac{du}{d\phi}$$. Substituting this in:
+$$
+\frac{dr}{d\lambda} = \frac{dr}{d\phi} \frac{d\phi}{d\lambda} = \frac{dr}{d\phi} \left( \frac{L}{r^2} \right) = \frac{dr}{d\phi} (L u^2)
+$$
 
-$$\frac{dr}{d\lambda} = \left( -\frac{1}{u^2} \frac{du}{d\phi} \right) (L u^2) = -L \frac{du}{d\phi}$$
+Since $r = 1/u$, then $\frac{dr}{d\phi} = -\frac{1}{u^2} \frac{du}{d\phi}$. Substituting this in, we have
+
+$$
+\frac{dr}{d\lambda} = \left( -\frac{1}{u^2} \frac{du}{d\phi} \right) (L u^2) = -L \frac{du}{d\phi}
+$$
 
 ## 6. The Orbit Equation
-Substitute $$\frac{dr}{d\lambda} = -L \frac{du}{d\phi}$$and$$1/r = u$$ into Equation (2):
 
-$$\left( -L \frac{du}{d\phi} \right)^2 = e^2 c^2 - L^2 u^2 (1 - 2mu)$$
+Substitute $\frac{dr}{d\lambda} = -L \frac{du}{d\phi}$ and $1/r = u$ into (2), 
 
-Divide the entire equation by $$L^2$$:
+$$
+\left( -L \frac{du}{d\phi} \right)^2 = e^2 c^2 - L^2 u^2 (1 - 2mu)
+$$
 
-$$\left( \frac{du}{d\phi} \right)^2 = \frac{e^2 c^2}{L^2} - u^2 + 2mu^3 \quad \dots (3)$$
+Dividing the entire equation by $L^2$,
+
+$$
+\left( \frac{du}{d\phi} \right)^2 = \frac{e^2 c^2}{L^2} - u^2 + 2mu^3 \quad \dots \ (3)
+$$
 
 ## 7. The Final Binet Form
-Differentiate Equation (3) with respect to $$\phi$$ using the chain rule ($$\frac{d}{d\phi} [u^n] = n u^{n-1} \frac{du}{d\phi}$$):
 
-$$2 \left( \frac{du}{d\phi} \right) \left( \frac{d^2u}{d\phi^2} \right) = 0 - 2u \left( \frac{du}{d\phi} \right) + 6mu^2 \left( \frac{du}{d\phi} \right)$$
+Differentiate (3) with respect to $\phi$ using the chain rule ($\frac{d}{d\phi} [u^n] = n u^{n-1} \frac{du}{d\phi}$) to get
 
-Dividing both sides by $$2 \frac{du}{d\phi}$$(assuming the path is not a perfect circle where$$du/d\phi = 0$$):
+$$
+2 \left( \frac{du}{d\phi} \right) \left( \frac{d^2u}{d\phi^2} \right) = 0 - 2u \left( \frac{du}{d\phi} \right) + 6mu^2 \left( \frac{du}{d\phi} \right)
+$$
 
-$$\frac{d^2u}{d\phi^2} + u = 3mu^2$$
+Dividing both sides by $2 \frac{du}{d\phi}$ (assuming the path is not a perfect circle where $du/d\phi = 0$),
 
-Substituting $$m = \frac{GM}{c^2}$$ back in, we obtain the Binet equation for light:
+$$
+\frac{d^2u}{d\phi^2} + u = 3mu^2
+$$
 
-$$\frac{d^2u}{d\phi^2} + u = \frac{3GM}{c^2} u^2$$
+Substituting $m = \frac{GM}{c^2}$ back in, we obtain the final Binet equation
 
-In natural units (where $G = c = 1$ and the Schwarzschild radius $r_s = 2M = 1$), the motion of a photon is governed by the geodesic equation.
+$$
+\frac{d^2u}{d\phi^2} + u = \frac{3GM}{c^2} u^2
+$$
 
-### 2. Binet's Equation
-To solve for the light path efficiently, we transform the trajectory into polar coordinates $(r, \phi)$ within the plane of the ray. By substituting $u = 1/r$, the equation of motion becomes a second-order differential equation known as the **Binet Equation**:
-
-$$\frac{d^2u}{d\phi^2} + u = \frac{3}{2}u^2$$
 
 Defining $v = \frac{du}{d\phi}$, we can break this down into a system of two first-order equations:
 
@@ -135,6 +153,18 @@ The wispy, organic look of the disc is generated via **Domain-Warped Perlin Nois
 
 ### 3. Environment Mapping
 Rays that escape the black hole's gravity sample an **Equirectangular Skybox** (e.g., a high-resolution Milky Way texture). Spherical UV mapping ensures that the stars and nebulae appear correctly distorted by the gravitational lensing.
+
+
+For every pixel on the screen, we shoot a ray from the camera, through the (virtual) screen in the world space. If the ray does hit an object, we can use different shading methods to color the pixel for that specific ray. Consider a camera at the origin, and a world screen 1 unit away from the camera in the positive z direction. The size of the screen in the world space is determined by the FOV angle of the camera, the distance between the camera and the screen, and its resolution,  (Width, Height). Let W and H denote the horizontal and vertical length of the world screen, and d denote the distance between the camera and the screen (which we standardize as 1 unit). 
+
+$$
+W = 2d \cdot \tan(\frac{\text{FOV}}{2})
+$$
+
+$$
+H = \frac{W}{\text{width}}\cdot \text{height}
+$$
+
 
 <script>
   window.MathJax = {
