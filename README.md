@@ -66,8 +66,6 @@ The wispy, organic look of the disc is generated via **Domain-Warped Perlin Nois
 ### 3. Environment Mapping
 Rays that escape the black hole's gravity sample an **Equirectangular Skybox** (e.g., a high-resolution Milky Way texture). Spherical UV mapping ensures that the stars and nebulae appear correctly distorted by the gravitational lensing.
 
-<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <script>
   window.MathJax = {
     tex: {
@@ -78,7 +76,6 @@ Rays that escape the black hole's gravity sample an **Equirectangular Skybox** (
   };
 </script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
 
 
 
