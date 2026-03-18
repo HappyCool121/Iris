@@ -32,66 +32,71 @@ For light rays, the spacetime interval is zero ($ds^2 = 0$). Due to spherical sy
 
 $$0 = -\left(1 - \frac{2m}{r}\right)c^2 dt^2 + \left(1 - \frac{2m}{r}\right)^{-1} dr^2 + r^2 d\phi^2 \quad \dots (1)$$
 
+# Derivation of the Binet Equation for Light Paths in Schwarzschild Spacetime
 
+To derive the Binet equation for light (null geodesics) around a non-rotating Schwarzschild black hole, we start from the metric and use the constants of motion.
 
-\subsection*{2. Constraints for Null Geodesics}
-For light rays, the spacetime interval is zero ($ds^2 = 0$). Due to spherical symmetry, we can restrict the motion to the equatorial plane ($\theta = \pi/2, d\theta = 0$). The metric simplifies to:
-\[
-0 = -\left(1 - \frac{2m}{r}\right)c^2 dt^2 + \left(1 - \frac{2m}{r}\right)^{-1} dr^2 + r^2 d\phi^2 \quad \dots (1)
-\]
+---
 
-\subsection*{3. Constants of Motion}
-Because the metric is independent of $t$ and $\phi$, we have two conserved quantities along the geodesic, associated with an affine parameter $\lambda$:
-\begin{enumerate}
-    \item \textbf{Energy ($e$):} From the Killing vector $\xi = \partial_t$:
-    \[ \left(1 - \frac{2m}{r}\right) \frac{dt}{d\lambda} = e \]
-    \item \textbf{Angular Momentum ($L$):} From the Killing vector $\eta = \partial_\phi$:
-    \[ r^2 \frac{d\phi}{d\lambda} = L \]
-\end{enumerate}
+## 1. The Schwarzschild Metric
+The Schwarzschild metric in coordinates $$(t, r, \theta, \phi)$$ is given by:
 
-\subsection*{4. The Radial Equation}
-Substituting the expressions for $\frac{dt}{d\lambda}$ and $\frac{d\phi}{d\lambda}$ back into Equation (1):
-\[
-0 = -\left(1 - \frac{2m}{r}\right)c^2 \left[ \frac{e}{1 - 2m/r} \right]^2 + \left(1 - \frac{2m}{r}\right)^{-1} \left( \frac{dr}{d\lambda} \right)^2 + r^2 \left( \frac{L}{r^2} \right)^2
-\]
-Multiplying through by $(1 - 2m/r)$ and rearranging for the radial derivative:
-\[
-\left( \frac{dr}{d\lambda} \right)^2 = e^2 c^2 - \frac{L^2}{r^2} \left( 1 - \frac{2m}{r} \right) \quad \dots (2)
-\]
+$$ds^2 = -\left(1 - \frac{2m}{r}\right)c^2 dt^2 + \left(1 - \frac{2m}{r}\right)^{-1} dr^2 + r^2(d\theta^2 + \sin^2\theta d\phi^2)$$
 
-\subsection*{5. Variable Substitution (Binet Transformation)}
-To find the shape of the orbit $u(\phi)$, we define $u = 1/r$. Using the chain rule:
-\[
-\frac{dr}{d\lambda} = \frac{dr}{d\phi} \frac{d\phi}{d\lambda} = \frac{dr}{d\phi} \left( \frac{L}{r^2} \right) = \frac{dr}{d\phi} (L u^2)
-\]
-Since $r = 1/u$, then $\frac{dr}{d\phi} = -\frac{1}{u^2} \frac{du}{d\phi}$. Substituting this in:
-\[
-\frac{dr}{d\lambda} = \left( -\frac{1}{u^2} \frac{du}{d\phi} \right) (L u^2) = -L \frac{du}{d\phi}
-\]
+where $$m = \frac{GM}{c^2}$$ is the geometric mass.
 
-\subsection*{6. The Orbit Equation}
-Substitute $\frac{dr}{d\lambda} = -L \frac{du}{d\phi}$ and $1/r = u$ into Equation (2):
-\[
-\left( -L \frac{du}{d\phi} \right)^2 = e^2 c^2 - L^2 u^2 (1 - 2mu)
-\]
-Divide the entire equation by $L^2$:
-\[
-\left( \frac{du}{d\phi} \right)^2 = \frac{e^2 c^2}{L^2} - u^2 + 2mu^3 \quad \dots (3)
-\]
+## 2. Constraints for Null Geodesics
+For light rays, the spacetime interval is zero ($$ds^2 = 0$$). Due to spherical symmetry, we can restrict the motion to the equatorial plane ($$\theta = \pi/2, d\theta = 0$$). The metric simplifies to:
 
-\subsection*{7. The Final Binet Form}
-Differentiate Equation (3) with respect to $\phi$ using the chain rule ($\frac{d}{d\phi} [u^n] = n u^{n-1} \frac{du}{d\phi}$):
-\[
-2 \left( \frac{du}{d\phi} \right) \left( \frac{d^2u}{d\phi^2} \right) = 0 - 2u \left( \frac{du}{d\phi} \right) + 6mu^2 \left( \frac{du}{d\phi} \right)
-\]
-Dividing both sides by $2 \frac{du}{d\phi}$ (assuming the path is not a perfect circle where $du/d\phi = 0$):
-\[
-\frac{d^2u}{d\phi^2} + u = 3mu^2
-\]
-Substituting $m = \frac{GM}{c^2}$ back in, we obtain the Binet equation for light:
-\[
-\boxed{\frac{d^2u}{d\phi^2} + u = \frac{3GM}{c^2} u^2}
-\]
+$$0 = -\left(1 - \frac{2m}{r}\right)c^2 dt^2 + \left(1 - \frac{2m}{r}\right)^{-1} dr^2 + r^2 d\phi^2 \quad \dots (1)$$
+
+## 3. Constants of Motion
+Because the metric is independent of $$t$$and$$\phi$$, we have two conserved quantities along the geodesic, associated with an affine parameter $$\lambda$$:
+
+* **Energy ($$e$$):** From the Killing vector $$\xi = \partial_t$$:
+    $$\left(1 - \frac{2m}{r}\right) \frac{dt}{d\lambda} = e$$
+* **Angular Momentum ($$L$$):** From the Killing vector $$\eta = \partial_\phi$$:
+    $$r^2 \frac{d\phi}{d\lambda} = L$$
+
+## 4. The Radial Equation
+Substituting the expressions for $$\frac{dt}{d\lambda}$$and$$\frac{d\phi}{d\lambda}$$ back into Equation (1):
+
+$$0 = -\left(1 - \frac{2m}{r}\right)c^2 \left[ \frac{e}{1 - 2m/r} \right]^2 + \left(1 - \frac{2m}{r}\right)^{-1} \left( \frac{dr}{d\lambda} \right)^2 + r^2 \left( \frac{L}{r^2} \right)^2$$
+
+Multiplying through by $$(1 - 2m/r)$$ and rearranging for the radial derivative:
+
+$$\left( \frac{dr}{d\lambda} \right)^2 = e^2 c^2 - \frac{L^2}{r^2} \left( 1 - \frac{2m}{r} \right) \quad \dots (2)$$
+
+## 5. Variable Substitution (Binet Transformation)
+To find the shape of the orbit $$u(\phi)$$, we define $$u = 1/r$$. Using the chain rule:
+
+$$\frac{dr}{d\lambda} = \frac{dr}{d\phi} \frac{d\phi}{d\lambda} = \frac{dr}{d\phi} \left( \frac{L}{r^2} \right) = \frac{dr}{d\phi} (L u^2)$$
+
+Since $$r = 1/u$$, then $$\frac{dr}{d\phi} = -\frac{1}{u^2} \frac{du}{d\phi}$$. Substituting this in:
+
+$$\frac{dr}{d\lambda} = \left( -\frac{1}{u^2} \frac{du}{d\phi} \right) (L u^2) = -L \frac{du}{d\phi}$$
+
+## 6. The Orbit Equation
+Substitute $$\frac{dr}{d\lambda} = -L \frac{du}{d\phi}$$and$$1/r = u$$ into Equation (2):
+
+$$\left( -L \frac{du}{d\phi} \right)^2 = e^2 c^2 - L^2 u^2 (1 - 2mu)$$
+
+Divide the entire equation by $$L^2$$:
+
+$$\left( \frac{du}{d\phi} \right)^2 = \frac{e^2 c^2}{L^2} - u^2 + 2mu^3 \quad \dots (3)$$
+
+## 7. The Final Binet Form
+Differentiate Equation (3) with respect to $$\phi$$ using the chain rule ($$\frac{d}{d\phi} [u^n] = n u^{n-1} \frac{du}{d\phi}$$):
+
+$$2 \left( \frac{du}{d\phi} \right) \left( \frac{d^2u}{d\phi^2} \right) = 0 - 2u \left( \frac{du}{d\phi} \right) + 6mu^2 \left( \frac{du}{d\phi} \right)$$
+
+Dividing both sides by $$2 \frac{du}{d\phi}$$(assuming the path is not a perfect circle where$$du/d\phi = 0$$):
+
+$$\frac{d^2u}{d\phi^2} + u = 3mu^2$$
+
+Substituting $$m = \frac{GM}{c^2}$$ back in, we obtain the Binet equation for light:
+
+$$\frac{d^2u}{d\phi^2} + u = \frac{3GM}{c^2} u^2$$
 
 In natural units (where $G = c = 1$ and the Schwarzschild radius $r_s = 2M = 1$), the motion of a photon is governed by the geodesic equation.
 
