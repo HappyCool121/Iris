@@ -1,5 +1,7 @@
 Iris is a a real time GPU-accelerated render engine utilizing MacOS's Metal API for visualizing non-rotating Shwarzchild black holes. It uses a Range-Kutta solver ran on GPU kernels for the simplified null geodesic equations to compute non linear light paths.
 
+![test picture](images/galaxy_bg.jpg)
+
 ### Average render time on Macbook Air M4:
 
 - ~14ms per frame (~70 fps)
