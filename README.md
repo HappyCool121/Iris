@@ -1,4 +1,3 @@
-# 
 
 Iris is a a real time GPU-accelerated render engine utilizing MacOS's Metal API for visualizing non-rotating Shwarzchild black holes. It uses a Range-Kutta solver ran on GPU kernels for the simplified null geodesic equations to compute non linear light paths.
 
@@ -161,22 +160,18 @@ To achieve real-time performance, IRIS offloads the heavy RK4 integration to the
 
 The very first iteration of the accretion disc was defined on a 2D plane with a simple lower and upper bound around the origin.
 
-![Simplistic Accretion Disc with Star behind the black hole](images/first_accretion.png)
+![Simplistic Accretion Disc with a Star behind the black hole](images/first_accretion.png)
 
-In the following versions, the accretion disc used a generated noise texture to add contrast and imitate the spiralling of dust, gasses and plasma around the black hole. In addition to the texture, the accretion disc also simulated Doppler Beaming and Blackbody coloring, adding to the realism. However, these effects were 'faked' since they could not be achieved with our generalization of the Shwarzschild metric. 
+In the following versions, the accretion disc used a generated noise texture to add contrast and imitate the spiralling of dust, gasses and plasma around the black hole. The organic look of the disc is generated via Domain-Warped Perlin Noise, generated on the CPU using a custom gradient hash. It is then passed to the GPU, where the kernel samples this noise using polar coordinates $$(r, \phi)$$ to create a realistic, flowing disc structure. In addition to the texture, the accretion disc also simulated Doppler Beaming and Blackbody coloring, adding to the realism. However, these effects were 'faked' since they could not be achieved with our generalization of the Shwarzschild metric. 
 
 - **Doppler Beaming:** Due to the high orbital velocities of the disc, light from the side moving towards the observer appears brighter and shifted in color, while the side moving away appears dimmer.
 - **Blackbody Coloring:** The disc's color is determined by its temperature (modeled with a radial falloff), shifting from blinding white at the inner edge to deep oranges and reds at the periphery.
 
-
-
-### 2. Procedural Noise
-
-The wispy, organic look of the disc is generated via **Domain-Warped Perlin Noise**. A noise texture is generated on the CPU using a custom gradient hash and then passed to the GPU. The kernel samples this noise using polar coordinates $(r, \phi)$ to create a realistic, flowing disc structure.
+![Final accretion disc to imitate a realistic black hole](images/accretion_disk_final.png)
 
 ### 3. Environment Mapping
 
-Rays that escape the black hole's gravity sample an **Equirectangular Skybox** (e.g., a high-resolution Milky Way texture). Spherical UV mapping ensures that the stars and nebulae appear correctly distorted by the gravitational lensing.
+Rays that escape the black hole's gravity sample an Equirectangular Skybox, in this case, a high-resolution Milky Way texture. Spherical UV mapping ensures that the stars and nebulae appear correctly distorted by the gravitational lensing for dramatic effect.
 
 <script>
   window.MathJax = {
