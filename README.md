@@ -1,15 +1,16 @@
-# IRIS by imari
 Iris is a a real time GPU-accelerated render engine utilizing MacOS's Metal API for visualizing non-rotating Shwarzchild black holes. It uses a Range-Kutta solver ran on GPU kernels for the simplified null geodesic equations to compute non linear light paths.
 
 ### Average render time on Macbook Air M4:
-* ~14ms per frame (~70 fps)
-* 1000 x 800 screen resolution (~8ms per frame for 800 x 600)
-* 0.05 rad step size, 1000 steps
+
+- ~14ms per frame (~70 fps)
+- 1000 x 800 screen resolution (~8ms per frame for 800 x 600)
+- 0.05 rad step size, 1000 steps
 
 # How to use
+
 The code works right out the box as it contains (almost) all the relavant libraries and dependencies needed. However, this
 is designed to work on Macs, more specifically anything with an Apple Sillicon chip (M1 or higher), since it uses
-Apple GPU kernels for the raytracing. You need to have Xcode installed to be able to use Metal, and SDL installed via Homebrew. After building the project with CMake, the first render will be a front view of the black hole. There are two primary ways to interact with the renderer; POV camera view (with WASD and arrow keys) and orbital camera view (AD to rotate around the black hole, WS to change the radius of orbit). You can also adjust the sliders to control the accretion disc and position of the sun (not really a sun, more like a star but whatever).
+Apple GPU kernels for the raytracing. You will need to have Xcode installed to be able to use Metal, and have SDL installed via Homebrew. After building the project with CMake, the first render will be a front view of the black hole. There are two primary ways to interact with the renderer; POV camera view (with WASD and arrow keys) and orbital camera view (AD to rotate around the black hole, WS to change the radius of orbit). You can also adjust the sliders to control the rotation of the accretion disc and the position of the sun (not really a sun, more like a star but whatever).
 
 # Tweaking the results
 
@@ -19,16 +20,15 @@ the step size is 0.05 radians, with 1000 steps, which yields an accurate render 
 
 # How does it work?
 
-## The physics (and the math)
+At the core of Iris is the simulation of light paths in the curved spacetime around a Schwarzschild Black Hole. Unlike traditional raytracers which simulate linear light transport, Iris computes the null geodesics, which are the curved paths that light follows around the black hole due to its gravity.
 
-At the core of Iris is the simulation of light paths in the curved spacetime around a Schwarzschild Black Hole. Unlike traditional raytracers where light travels in straight lines, Iris computes the null geodesics, which are the curved paths that light follows around the black hole due to its gravity. 
-# Derivation of the Binet Equation for Light Paths around a non-rotating Shwarzschild Black Hole
+# I Derivation of the Binet Equation for Light Paths around a non-rotating Shwarzschild Black Hole
 
 We start from the Shwarzschild metric, define the constants of motion, and use symmetries to reduce it to the Binet Equation.
 
 ---
 
-## 1. The Schwarzschild Metric
+### 1. The Schwarzschild Metric
 
 The Schwarzschild metric in spherical coordinates $(t, r, \theta, \phi)$ with the black hole at the origin is given by
 
@@ -38,7 +38,7 @@ $$
 
 where $m = \frac{GM}{c^2}$ is the geometric mass.
 
-## 2. Constraints for Null Geodesics
+### 2. Constraints for Null Geodesics
 
 For light rays (photons with speed $c$), the spacetime interval is zero ($ds^2 = 0$). Due to spherical symmetry, we can restrict the motion to an equatorial plane ($\theta = \pi/2, d\theta = 0$). Then the metric simplifies to
 
@@ -46,7 +46,7 @@ $$
 0 = -\left(1 - \frac{2m}{r}\right)c^2 dt^2 + \left(1 - \frac{2m}{r}\right)^{-1} dr^2 + r^2 d\phi^2 \quad \dots \ (1)
 $$
 
-## 3. Constants of Motion
+### 3. Constants of Motion
 
 Because the metric is independent of $t$ and $\phi$, we have two conserved quantities along the geodesic, associated with an affine parameter $\lambda$:
 
@@ -62,6 +62,8 @@ $$
 r^2 \frac{d\phi}{d\lambda} = L
 $$
 
+### 4. The Radial Equation
+
 Substituting the expressions for $\frac{dt}{d\lambda}$ and $\frac{d\phi}{d\lambda}$ back into (1), 
 
 $$
@@ -74,7 +76,7 @@ $$
 \left( \frac{dr}{d\lambda} \right)^2 = e^2 c^2 - \frac{L^2}{r^2} \left( 1 - \frac{2m}{r} \right) \quad \dots \ (2)
 $$
 
-## 5. Variable Substitution (Binet Transformation)
+### 5. Variable Substitution (Binet Transformation)
 
 To find the shape of the orbit $u(\phi)$, we define $u = 1/r$. Using the chain rule,
 
@@ -88,7 +90,7 @@ $$
 \frac{dr}{d\lambda} = \left( -\frac{1}{u^2} \frac{du}{d\phi} \right) (L u^2) = -L \frac{du}{d\phi}
 $$
 
-## 6. The Orbit Equation
+### 6. The Orbit Equation
 
 Substitute $\frac{dr}{d\lambda} = -L \frac{du}{d\phi}$ and $1/r = u$ into (2), 
 
@@ -102,9 +104,7 @@ $$
 \left( \frac{du}{d\phi} \right)^2 = \frac{e^2 c^2}{L^2} - u^2 + 2mu^3 \quad \dots \ (3)
 $$
 
-## 7. The Final Binet Form
-
-Differentiate (3) with respect to $\phi$ using the chain rule ($\frac{d}{d\phi} [u^n] = n u^{n-1} \frac{du}{d\phi}$) to get
+### 7. The Final Binet Form
 
 $$
 2 \left( \frac{du}{d\phi} \right) \left( \frac{d^2u}{d\phi^2} \right) = 0 - 2u \left( \frac{du}{d\phi} \right) + 6mu^2 \left( \frac{du}{d\phi} \right)
@@ -122,18 +122,26 @@ $$
 \frac{d^2u}{d\phi^2} + u = \frac{3GM}{c^2} u^2
 $$
 
-
 Defining $v = \frac{du}{d\phi}$, we can break this down into a system of two first-order equations:
 
-- $$\frac{du}{d\phi} = v$$
-- $$\frac{dv}{d\phi} = \frac{3}{2}u^2 - u$$
+$$
+\frac{du}{d\phi} = v
+$$
 
-### 3. Numerical Integration (RK4)
-IRIS uses the **Runge-Kutta 4th Order (RK4)** method to solve this system. For every pixel, the GPU integrates the ray's path step-by-step.
+$$
+\frac{dv}{d\phi} = \frac{3}{2}u^2 - u
+$$
+
+# II Computing light paths
+
+### Numerical Integration with RK4
+
+IRIS uses the **Runge-Kutta 4th Order (RK4)** method to solve the Binet equations for each light path. For every pixel, the GPU integrates the ray's path step-by-step.
+
 - **Step Size:** Typically $0.05$ radians.
 - **Basis Vectors:** Since the Schwarzschild metric is spherically symmetric, the ray stays within a 2D plane defined by the camera's position and the initial ray direction. The kernel computes this 2D path and then maps it back to 3D space to check for intersections with the accretion disc or the sun.
 
-## GPU accelerated raytracing with Metalcpp
+# III GPU accelerated raytracing with Metal
 
 To achieve real-time performance, IRIS offloads the heavy RK4 integration to the GPU using **Apple Metal**.
 
@@ -141,30 +149,20 @@ To achieve real-time performance, IRIS offloads the heavy RK4 integration to the
 - **Metal-cpp:** The project utilizes the `metal-cpp` header-only library, which allows the C++ codebase to interact directly with the Metal API without the need for Objective-C or Swift.
 - **Zero-Copy Memory:** Data such as the pixel buffer and camera uniforms are stored in shared memory, enabling efficient transfer between the CPU (for SDL/ImGui) and the GPU (for rendering) without expensive copies.
 
-## Visual Fidelity
-
 ### 1. Relativistic Accretion Disc
+
 The accretion disc isn't just a static texture. It incorporates several relativistic effects:
+
 - **Doppler Beaming:** Due to the high orbital velocities of the disc, light from the side moving towards the observer appears brighter and shifted in color, while the side moving away appears dimmer.
 - **Blackbody Coloring:** The disc's color is determined by its temperature (modeled with a radial falloff), shifting from blinding white at the inner edge to deep oranges and reds at the periphery.
 
 ### 2. Procedural Noise
+
 The wispy, organic look of the disc is generated via **Domain-Warped Perlin Noise**. A noise texture is generated on the CPU using a custom gradient hash and then passed to the GPU. The kernel samples this noise using polar coordinates $(r, \phi)$ to create a realistic, flowing disc structure.
 
 ### 3. Environment Mapping
+
 Rays that escape the black hole's gravity sample an **Equirectangular Skybox** (e.g., a high-resolution Milky Way texture). Spherical UV mapping ensures that the stars and nebulae appear correctly distorted by the gravitational lensing.
-
-
-For every pixel on the screen, we shoot a ray from the camera, through the (virtual) screen in the world space. If the ray does hit an object, we can use different shading methods to color the pixel for that specific ray. Consider a camera at the origin, and a world screen 1 unit away from the camera in the positive z direction. The size of the screen in the world space is determined by the FOV angle of the camera, the distance between the camera and the screen, and its resolution,  (Width, Height). Let W and H denote the horizontal and vertical length of the world screen, and d denote the distance between the camera and the screen (which we standardize as 1 unit). 
-
-$$
-W = 2d \cdot \tan(\frac{\text{FOV}}{2})
-$$
-
-$$
-H = \frac{W}{\text{width}}\cdot \text{height}
-$$
-
 
 <script>
   window.MathJax = {
