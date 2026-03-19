@@ -163,10 +163,12 @@ The very first iteration of the accretion disc was defined on a 2D plane with a 
 
 ![Simplistic Accretion Disc with Star behind the black hole](images/first_accretion.png)
 
-The accretion disc isn't just a static texture. It incorporates several relativistic effects:
+In the following versions, the accretion disc used a generated noise texture to add contrast and imitate the spiralling of dust, gasses and plasma around the black hole. In addition to the texture, the accretion disc also simulated Doppler Beaming and Blackbody coloring, adding to the realism. However, these effects were 'faked' since they could not be achieved with our generalization of the Shwarzschild metric. 
 
 - **Doppler Beaming:** Due to the high orbital velocities of the disc, light from the side moving towards the observer appears brighter and shifted in color, while the side moving away appears dimmer.
 - **Blackbody Coloring:** The disc's color is determined by its temperature (modeled with a radial falloff), shifting from blinding white at the inner edge to deep oranges and reds at the periphery.
+
+
 
 ### 2. Procedural Noise
 
