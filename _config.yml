@@ -1,4 +1,4 @@
-theme: jekyll-theme-minima
+theme: minima
 markdown: kramdown
 kramdown:
   math_engine: mathjax
