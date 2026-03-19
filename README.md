@@ -1,8 +1,12 @@
+---
+layout: page
+---
+
 # IRIS by imari
 
 Iris is a a real time GPU-accelerated render engine utilizing MacOS's Metal API for visualizing non-rotating Shwarzchild black holes. It uses a Range-Kutta solver ran on GPU kernels for the simplified null geodesic equations to compute non linear light paths.
 
-![test picture](images/galaxy_bg.jpg)
+![Final Result of Iris](images/iris_render.png)
 
 ### Average render time on Macbook Air M4:
 
@@ -153,7 +157,15 @@ To achieve real-time performance, IRIS offloads the heavy RK4 integration to the
 - **Metal-cpp:** The project utilizes the `metal-cpp` header-only library, which allows the C++ codebase to interact directly with the Metal API without the need for Objective-C or Swift.
 - **Zero-Copy Memory:** Data such as the pixel buffer and camera uniforms are stored in shared memory, enabling efficient transfer between the CPU (for SDL/ImGui) and the GPU (for rendering) without expensive copies.
 
-### 1. Relativistic Accretion Disc
+### 1. Gravitational Lensing
+
+![Effect Gravitational lensing around the black hole on a checkerboard skybox](images/gravitational_lensing.png)
+
+### 2. Relativistic Accretion Disc
+
+The very first iteration of the accretion disc was defined on a 2D plane with a simple lower and upper bound around the origin.
+
+![Simplistic Accretion Disc with Star behind the black hole](images/first_accretion.png)
 
 The accretion disc isn't just a static texture. It incorporates several relativistic effects:
 
