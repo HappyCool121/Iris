@@ -125,24 +125,51 @@ $$
 \frac{d^2u}{d\phi^2} + u = \frac{3GM}{c^2} u^2
 $$
 
-Defining $v = \frac{du}{d\phi}$, we can break this down into a system of two first-order equations:
-
-$$
-\frac{du}{d\phi} = v
-$$
-
-$$
-\frac{dv}{d\phi} = \frac{3}{2}u^2 - u
-$$
-
 # II Computing light paths
 
 ### Numerical Integration with RK4
 
-IRIS uses the **Runge-Kutta 4th Order (RK4)** method to solve the Binet equations for each light path. For every pixel, the GPU integrates the ray's path step-by-step.
+### Reduction to first order differential equations
 
-- **Step Size:** Typically $0.05$ radians.
-- **Basis Vectors:** Since the Schwarzschild metric is spherically symmetric, the ray stays within a 2D plane defined by the camera's position and the initial ray direction. The kernel computes this 2D path and then maps it back to 3D space to check for intersections with the accretion disc or the sun.
+To actually compute the light paths, we first define the state vector $\boldsymbol{y}$ for a photon, which represents the geometry of the orbit at a specific angle $\phi$, where
+
+$$
+\boldsymbol{y} = \begin{bmatrix} y_1 \\ y_2 \end{bmatrix} = \begin{bmatrix} u \\ \frac{du}{d \phi} \end{bmatrix}
+$$
+
+Then the system of first-order ODEs becomes: 
+
+$$
+
+\begin{align*}
+\frac{dy_1}{d \phi} &= y_2 \\
+\frac{dy_2}{d \phi} &= 3my_1 ^2 - y_1
+\end{align*}
+$$
+
+In vector form, 
+
+$$
+\frac{d \boldsymbol{y}}{d \phi} = f(\phi, \boldsymbol{y}) = \begin{bmatrix} y_2 \\ 3my_1 ^2 - y_1 \end{bmatrix}
+$$
+
+### Initial conditions
+
+To numerically evaluate the specific paths, we need the initial value $u(0)$ and its derivative $u’(0)$. Using the orbital equation derived earlier (3),
+
+$$
+\left( \frac{du}{d\phi} \right)^2 = \frac{1}{b^2} - u^2 + 2mu^3 \quad \dots \ (3)
+$$
+
+where $b = \frac{L}{ec}$
+
+Then for a photon emitted from the camera at $r_{initial} = 100$, we have 
+
+$$
+\begin{align*}
+u(0) &= \frac{1}{r_{intial}} \\ u'(0) &= -\sqrt{\frac{1}{b^2} - u(0)^2 + 2mu(0)^3 }
+\end{align*}
+$$
 
 # III GPU accelerated raytracing with Metal
 
