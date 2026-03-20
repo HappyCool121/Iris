@@ -358,6 +358,9 @@ In the following versions, the accretion disc used a generated noise texture to 
 
 Rays that escape the black hole's gravity sample an Equirectangular Skybox, in this case, a high-resolution Milky Way texture. Spherical UV mapping ensures that the stars and nebulae appear correctly distorted by the gravitational lensing for dramatic effect.
 
+
+![Smaller accretion disc to show effect of lensing on skybox](images/skybox_lensing.png)
+
 <script>
   window.MathJax = {
     tex: {
