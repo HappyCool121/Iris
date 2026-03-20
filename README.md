@@ -346,11 +346,11 @@ The very first iteration of the accretion disc was defined on a 2D plane with a 
 
 ![Simplistic Accretion Disc with a Star behind the black hole](images/first_accretion.png)
 
-In the following versions, the accretion disc used a generated noise texture to add contrast and imitate the spiralling of dust, gasses and plasma around the black hole. In addition to the texture, the accretion disc also simulated Doppler Beaming and Blackbody coloring, adding to the realism. However, these effects were 'faked' since they could not be achieved with our generalization of the Shwarzschild metric. 
+In the following versions, the accretion disc used a generated noise texture to add contrast and imitate the spiralling of dust, gasses and plasma around the black hole. In addition to the texture, doppler beaming and blackbody coloring are also simualted with procedural techniques, since they cannot be achieved with our generalization of the Shwarzschild metric. 
 
-- **Noise Texture** The organic look of the disc is generated via Domain-Warped Perlin Noise, generated on the CPU using a custom gradient hash. It is then passed to the GPU, where the kernel samples this noise using polar coordinates $$(r, \phi)$$ to create a realistic, flowing disc structure. 
+- **Generated Noise Texture** The organic look of the disc is generated via Domain-Warped Perlin Noise, generated on the CPU using a custom gradient hash. It is then passed to the GPU, where the kernel samples this noise using polar coordinates $$(r, \phi)$$ to create a realistic, flowing disc structure. 
 - **Doppler Beaming:** Due to the high orbital velocities of the disc, light from the side moving towards the observer appears brighter and shifted in color, while the side moving away appears dimmer.
-- **Blackbody Coloring:** The disc's color is determined by its temperature (modeled with a radial falloff), shifting from blinding white at the inner edge to deep oRunges and reds at the periphery.
+- **Blackbody Coloring:** The disc's color is determined by its temperature (modeled with a radial falloff), shifting from blinding white at the inner edge to deep oranges and reds at the periphery.
 
 ![Final accretion disc to imitate a realistic black hole](images/accretion_disk_final.png)
 
