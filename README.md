@@ -1,5 +1,5 @@
 
-Iris is a a real time GPU-accelerated render engine utilizing MacOS's Metal API for visualizing a non-rotating Shwarzchild black hole. It uses a Range-Kutta numerical method ran on GPU kernels to solve the simplified null geodesic equations for the non-linear light paths, showing the famous characteristics of black holes like gravitational lensing and photon rings.
+Iris is a a real time GPU-accelerated render engine utilizing MacOS's Metal API for visualizing a non-rotating Shwarzschild black hole. It uses a Runge-Kutta numerical method ran on GPU kernels to solve the simplified null geodesic equations for the non-linear light paths, capturing iconic relativistic phenomena such as gravitational lensing and the photon ring.
 
 ![Final Result of Iris](images/iris_render.png)
 
@@ -11,8 +11,8 @@ Iris is a a real time GPU-accelerated render engine utilizing MacOS's Metal API 
 
 # How to use
 
-The code works right out the box as it contains (almost) all the relavant libraries and dependencies needed. However, this
-is designed to work on Macs, more specifically anything with an Apple Sillicon chip (M1 or higher), since it uses
+The code works right out the box as it contains (almost) all the relevant libraries and dependencies needed. However, this
+is designed to work on Macs, more specifically anything with an Apple Silicon chip (M1 or higher), since it uses
 Apple GPU kernels for the raytracing. You will need to have Xcode installed to be able to use Metal, and have SDL installed via Homebrew. After building the project with CMake, the first render will be a front view of the black hole. There are two primary ways to interact with the renderer; POV camera view (with WASD and arrow keys) and orbital camera view (AD to rotate around the black hole, WS to change the radius of orbit). You can also adjust the sliders to control the rotation of the accretion disc and the position of the sun (not really a sun, more like a star but whatever).
 
 # Tweaking the results
@@ -131,7 +131,7 @@ $$
 
 ## Numerical Integration with RK4
 
-IRIS uses the **Runge-Kutta 4th Order (RK4)** method to solve the Binet equations for each light path. For every pixel, the GPU integrates the ray's path step-by-step, and returns a value based on where the photon ends up
+IRIS uses the **Runge-Kutta 4th Order (RK4)** method to solve the Binet equations for each light path. For every pixel, the GPU integrates the ray's path step-by-step, and returns a value based on where the photon ends up. 
 
 ### Reduction to first order differential equations
 
@@ -183,7 +183,7 @@ $$
 
 ## RK4 step algorithm
 
-The Binet equation tells us how the light paths curve with a differential equation, so we would have to trace out the curve using numerical methods. The Range-Kutta 4th Order or RK4 algorithm for short, is an extension of Euler's method to solve for the curve. Since the slope of curved spacetime changes rapidly (especially near the event horizon), using Euler's method alone will be inaccurate, veering way off the actual path for each step. 
+The Binet equation tells us how the light paths curve with a differential equation, so we would have to trace out the curve using numerical methods. The Runge-Kutta 4th Order or RK4 algorithm for short, is an extension of Euler's method to solve for the curve. Since the slope of curved spacetime changes rapidly (especially near the event horizon), using Euler's method alone will be inaccurate, veering way off the actual path for each step. 
 
 ### Sampling different points of the slope
 
@@ -262,8 +262,7 @@ To achieve real-time performance, IRIS offloads the heavy RK4 integration to the
 
 Below is as simplified sample of the raytracing process written in a `.metal` file that runs on the GPU
 
-```
-
+```metal
 kernel void render_black_hole(
     device uint* pixels [[buffer(0)]],
     constant Uniforms& uniforms [[buffer(1)]],
@@ -335,7 +334,7 @@ kernel void render_black_hole(
 ```
 
 # IV Visual Fidelity
-Although the computation of the light paths has been simplified to a single Binet equation, it is more than sifficient for demonstrating the key characteristics of a black hole. While most of the effects on the accretion disc aren't physically accurate, the simulation of the foundational behavior of light around the black hole gives rise to the famous gravitational lensing effect on the accretion disc and the space behind the black hole.
+Although the computation of the light paths has been simplified to a single Binet equation, it is more than sufficient for demonstrating the key characteristics of a black hole. While most of the effects on the accretion disc aren't physically accurate, the simulation of the foundational behavior of light around the black hole gives rise to the famous gravitational lensing effect on the accretion disc and the space behind the black hole.
 
 ### 1. Gravitational Lensing
 
@@ -351,7 +350,7 @@ In the following versions, the accretion disc used a generated noise texture to 
 
 - **Noise Texture** The organic look of the disc is generated via Domain-Warped Perlin Noise, generated on the CPU using a custom gradient hash. It is then passed to the GPU, where the kernel samples this noise using polar coordinates $$(r, \phi)$$ to create a realistic, flowing disc structure. 
 - **Doppler Beaming:** Due to the high orbital velocities of the disc, light from the side moving towards the observer appears brighter and shifted in color, while the side moving away appears dimmer.
-- **Blackbody Coloring:** The disc's color is determined by its temperature (modeled with a radial falloff), shifting from blinding white at the inner edge to deep oranges and reds at the periphery.
+- **Blackbody Coloring:** The disc's color is determined by its temperature (modeled with a radial falloff), shifting from blinding white at the inner edge to deep oRunges and reds at the periphery.
 
 ![Final accretion disc to imitate a realistic black hole](images/accretion_disk_final.png)
 
