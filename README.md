@@ -1,5 +1,5 @@
 
-Iris is a a real time GPU-accelerated render engine utilizing MacOS's Metal API for visualizing non-rotating Shwarzchild black holes. It uses a Range-Kutta solver ran on GPU kernels for the simplified null geodesic equations to compute non linear light paths.
+Iris is a a real time GPU-accelerated render engine utilizing MacOS's Metal API for visualizing a non-rotating Shwarzchild black hole. It uses a Range-Kutta numerical method ran on GPU kernels to solve the simplified null geodesic equations for the non-linear light paths, showing the famous characteristics of black holes like gravitational lensing and photon rings.
 
 ![Final Result of Iris](images/iris_render.png)
 
@@ -51,18 +51,18 @@ $$
 
 ### 3. Constants of Motion
 
-Because the metric is independent of $t$ and $\phi$, we have two conserved quantities along the geodesic, associated with an affine parameter $\lambda$:
+Because the metric is independent of $t$ and $\phi$, we have two conserved quantities due to symmtries along the geodesic, associated with an affine parameter $\lambda$. Using the Killing vectors representing the symmetries in energy $e$ and angular momentum $L$, we can rewrite the conserved quantities for
 
-- **Energy (**$e$**):** From the Killing vector $\xi = \partial_t$:
-
-$$
-\left(1 - \frac{2m}{r}\right) \frac{dt}{d\lambda} = e
-$$
-
-- **Angular Momentum (**$L$**):** From the Killing vector $\eta = \partial_\phi$:
+- **Energy (**$e$**):** The metric does not depend on the $t$-coordinates
 
 $$
-r^2 \frac{d\phi}{d\lambda} = L
+\xi_u \frac{dx^\mu}{d \lambda} = g_{tt} \frac{dt}{d \lambda} = \left(1 - \frac{2m}{r}\right) \frac{dt}{d\lambda} = e
+$$
+
+- **Angular Momentum (**$L$**):** The metric does not depend on the $\phi$-coordinates
+
+$$
+\xi_u \frac{dx^\mu}{d \lambda} = g_{\phi \phi} \frac{d \phi}{d \lambda} = r^2 \sin ^2 \theta \frac{d\phi}{d\lambda} = L
 $$
 
 ### 4. The Radial Equation
@@ -73,13 +73,13 @@ $$
 0 = -\left(1 - \frac{2m}{r}\right)c^2 \left[ \frac{e}{1 - 2m/r} \right]^2 + \left(1 - \frac{2m}{r}\right)^{-1} \left( \frac{dr}{d\lambda} \right)^2 + r^2 \left( \frac{L}{r^2} \right)^2
 $$
 
-Multiplying through by $(1 - 2m/r)$ and rearranging for the radial derivative:
+Multiplying through by $(1 - 2m/r)$ and rearranging for the radial derivative $\frac{dr}{d \lambda}$, we have
 
 $$
 \left( \frac{dr}{d\lambda} \right)^2 = e^2 c^2 - \frac{L^2}{r^2} \left( 1 - \frac{2m}{r} \right) \quad \dots \ (2)
 $$
 
-### 5. Variable Substitution (Binet Transformation)
+### 5. Substitution
 
 To find the shape of the orbit $u(\phi)$, we define $u = 1/r$. Using the chain rule,
 
@@ -109,17 +109,19 @@ $$
 
 ### 7. The Final Binet Form
 
+Differentiating (3) with respect to $\phi$, 
+
 $$
 2 \left( \frac{du}{d\phi} \right) \left( \frac{d^2u}{d\phi^2} \right) = 0 - 2u \left( \frac{du}{d\phi} \right) + 6mu^2 \left( \frac{du}{d\phi} \right)
 $$
 
-Dividing both sides by $2 \frac{du}{d\phi}$ (assuming the path is not a perfect circle where $du/d\phi = 0$),
+We divide both sides by $2 \frac{du}{d\phi}$ (assuming the path is not a perfect circle where $du/d\phi = 0$),
 
 $$
 \frac{d^2u}{d\phi^2} + u = 3mu^2
 $$
 
-Substituting $m = \frac{GM}{c^2}$ back in, we obtain the final Binet equation
+Substituting $m = \frac{GM}{c^2}$ back in, we obtain the final Binet equation for the null geodesic,
 
 $$
 \frac{d^2u}{d\phi^2} + u = \frac{3GM}{c^2} u^2
@@ -127,7 +129,9 @@ $$
 
 # II Computing light paths
 
-### Numerical Integration with RK4
+## Numerical Integration with RK4
+
+IRIS uses the **Runge-Kutta 4th Order (RK4)** method to solve the Binet equations for each light path. For every pixel, the GPU integrates the ray's path step-by-step, and returns a value based on where the photon ends up
 
 ### Reduction to first order differential equations
 
@@ -137,7 +141,13 @@ $$
 \boldsymbol{y} = \begin{bmatrix} y_1 \\ y_2 \end{bmatrix} = \begin{bmatrix} u \\ \frac{du}{d \phi} \end{bmatrix}
 $$
 
-Then the system of first-order ODEs becomes: 
+Taking $m = \frac{3GM}{c^2}$,the Binet equation can be written as 
+
+$$
+\frac{d^2u}{d\phi^2} + u = m u^2
+$$
+
+Which we can reduce to first order differential equations in terms of the state vector $\boldsymbol{y}$,
 
 $$
 
@@ -155,7 +165,7 @@ $$
 
 ### Initial conditions
 
-To numerically evaluate the specific paths, we need the initial value $u(0)$ and its derivative $u’(0)$. Using the orbital equation derived earlier (3),
+To numerically evaluate the specific paths, we need the initial value $u(0)$ and its derivative $u’(0)$. Consider the orbital equation derived earlier (3),
 
 $$
 \left( \frac{du}{d\phi} \right)^2 = \frac{1}{b^2} - u^2 + 2mu^3 \quad \dots \ (3)
@@ -163,13 +173,88 @@ $$
 
 where $b = \frac{L}{ec}$
 
-Then for a photon emitted from the camera at $r_{initial} = 100$, we have 
+Then by taking  $u = \frac{1}{r}$, and the negative square root of (3), (since the photon is moving towards the black hole) a photon emitted from the camera at $r_{initial}$ will have initial conditions
 
 $$
 \begin{align*}
 u(0) &= \frac{1}{r_{intial}} \\ u'(0) &= -\sqrt{\frac{1}{b^2} - u(0)^2 + 2mu(0)^3 }
 \end{align*}
 $$
+
+## RK4 step algorithm
+
+The Binet equation tells us how the light paths curve with a differential equation, so we would have to trace out the curve using numerical methods. The Range-Kutta 4th Order or RK4 algorithm for short, is an extension of Euler's method to solve for the curve. Since the slope of curved spacetime changes rapidly (especially near the event horizon), using Euler's method alone will be inaccurate, veering way off the actual path for each step. 
+
+### Sampling different points of the slope
+
+The RK4 algorithm solves this by sampling the slope at 4 different points within a single step to obtain an average direction for th photon at a particular point. Let our system be $\frac{d \boldsymbol{y}}{d \phi} = f(\phi, \boldsymbol{y})$, we define 4 increments $k_1, k_2, k_3, k_4$ within a single step of size $h$. Consider a state vector of the current step, $\boldsymbol{y}_n$, 
+
+- $k_1$: The slope at the start (Euler’s method)
+
+$$
+\mathbf{k}_1 = h \cdot \mathbf{f}(\phi_n, \mathbf{y}_n)
+$$
+
+- $k_2$: First midpoint slope
+
+$$
+\mathbf{k}_2 = h \cdot \mathbf{f}(\phi_n + \frac{h}{2}, \mathbf{y}_n + \frac{\mathbf{k}_1}{2})
+$$
+
+- $k_3$: Second midpoint slope
+
+$$
+\mathbf{k}_3 = h \cdot \mathbf{f}(\phi_n + \frac{h}{2}, \mathbf{y}_n + \frac{\mathbf{k}_2}{2})
+$$
+
+- $k_4$: End point slope
+
+$$
+\mathbf{k}_4 = h \cdot \mathbf{f}(\phi_n + h, \mathbf{y}_n + \mathbf{k}_3)
+$$
+
+### Weighted average
+
+Then we can combine the 4 increments $k_1, k_2, k_3, k_4$ using a specific weighted average derived from the Taylor Series Expansion, to get the state vector in the next step $\boldsymbol{y}_{n+1}$, 
+
+$$
+\mathbf{y}_{n+1} = \mathbf{y}_n + \frac{1}{6}(\mathbf{k}_1 + 2\mathbf{k}_2 + 2\mathbf{k}_3 + \mathbf{k}_4)
+$$
+
+### C++ code for RK4 algorithm
+
+```cpp
+	while (curr_steps < max_steps) {
+    if (is_debug_ray && curr_steps % 1000 == 0) {
+      std::cout << "[Debug Ray] RK4 Step: " << curr_steps << "/" << max_steps
+                << " | r = " << (1.0 / u) << std::endl;
+    }
+    // RK4 Integration Step 
+    
+    // Sampling 4 different points
+    double k1_u = v;
+    double k1_v = 1.5 * u * u - u;
+
+    double k2_u = v + 0.5 * d_phi * k1_v;
+    double k2_v =
+        1.5 * pow(u + 0.5 * d_phi * k1_u, 2) - (u + 0.5 * d_phi * k1_u);
+
+    double k3_u = v + 0.5 * d_phi * k2_v;
+    double k3_v =
+        1.5 * pow(u + 0.5 * d_phi * k2_u, 2) - (u + 0.5 * d_phi * k2_u);
+
+    double k4_u = v + d_phi * k3_v;
+    double k4_v = 1.5 * pow(u + d_phi * k3_u, 2) - (u + d_phi * k3_u);
+
+    // Update u and v with Weighted Average
+    u += (d_phi / 6.0) * (k1_u + 2 * k2_u + 2 * k3_u + k4_u);
+    v += (d_phi / 6.0) * (k1_v + 2 * k2_v + 2 * k3_v + k4_v);
+    phi += d_phi;
+    
+    // Check for termination conditions
+    
+  }
+```
 
 # III GPU accelerated raytracing with Metal
 
