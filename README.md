@@ -224,7 +224,7 @@ $$
 ### C++ code for RK4 algorithm
 
 ```cpp
-	while (curr_steps < max_steps) {
+while (curr_steps < max_steps) {
     if (is_debug_ray && curr_steps % 1000 == 0) {
       std::cout << "[Debug Ray] RK4 Step: " << curr_steps << "/" << max_steps
                 << " | r = " << (1.0 / u) << std::endl;
@@ -253,16 +253,89 @@ $$
     
     // Check for termination conditions
     
-  }
+}
 ```
 
 # III GPU accelerated raytracing with Metal
 
-To achieve real-time performance, IRIS offloads the heavy RK4 integration to the GPU using **Apple Metal**.
+To achieve real-time performance, IRIS offloads the heavy RK4 integration to the GPU using **Metal kernels**. Since the light path comutation is carried out for every pixel on the screen, we can assign each one to a separate thread on the GPU, allowing multiple rays to be calculated simultaneously. The project utilizes the `metal-cpp` header-only library, which allows the C++ codebase to interact directly with the Metal API without the need for Objective-C or Swift. Data such as the pixel buffer and camera uniforms are stored in shared memory, enabling efficient transfer between the CPU (for SDL/ImGui) and the GPU (for rendering) without expensive copies, unlike traditional GPU/CPU communication via a PCIe bus. This makes the integration of Mac GPUs so much more efficient, offering an enormous performance boost, more than **300% faster!** compared to using the CPU alone. 
 
-- **Highly Parallel:** Every pixel on the screen is a separate thread on the GPU, allowing thousands of rays to be integrated simultaneously.
-- **Metal-cpp:** The project utilizes the `metal-cpp` header-only library, which allows the C++ codebase to interact directly with the Metal API without the need for Objective-C or Swift.
-- **Zero-Copy Memory:** Data such as the pixel buffer and camera uniforms are stored in shared memory, enabling efficient transfer between the CPU (for SDL/ImGui) and the GPU (for rendering) without expensive copies.
+Below is as simplified sample of the raytracing process written in a `.metal` file that runs on the GPU
+
+```
+
+kernel void render_black_hole(
+    device uint* pixels [[buffer(0)]],
+    constant Uniforms& uniforms [[buffer(1)]],
+    texture2d<float, access::sample> noise_texture [[texture(0)]],
+    texture2d<float, access::sample> skybox_texture [[texture(1)]],
+    uint2 gid [[thread_position_in_grid]]
+) {
+
+    // 6. RK4 step process
+    for (int curr_steps = 0; curr_steps < max_steps; curr_steps++) {
+
+        // RK4 Integration Step (Solving: v' = 1.5 * u^2 - u)
+        float k1_u = v;
+        float k1_v = 1.5f * u * u - u;
+
+        float u_k2 = u + 0.5f * d_phi * k1_u;
+        float k2_u = v + 0.5f * d_phi * k1_v;
+        float k2_v = 1.5f * u_k2 * u_k2 - u_k2;
+
+        float u_k3 = u + 0.5f * d_phi * k2_u;
+        float k3_u = v + 0.5f * d_phi * k2_v;
+        float k3_v = 1.5f * u_k3 * u_k3 - u_k3;
+
+        float u_k4 = u + d_phi * k3_u;
+        float k4_u = v + d_phi * k3_v;
+        float k4_v = 1.5f * u_k4 * u_k4 - u_k4;
+
+        // Update u, v, and phi
+        u += (d_phi / 6.0f) * (k1_u + 2.0f * k2_u + 2.0f * k3_u + k4_u);
+        v += (d_phi / 6.0f) * (k1_v + 2.0f * k2_v + 2.0f * k3_v + k4_v);
+        phi += d_phi;
+
+        // Map back to 3D to check for collisions
+        float r = 1.0f / u;
+        float local_x = r * cos(phi);
+        float local_y = r * sin(phi);
+        float3 curr_pos3D = e1 * local_x + e2 * local_y;
+
+        // Termination Conditions
+        // A. Fell into the Event Horizon
+        if (r <= 1.0f) {
+            color = float3(0.0f); // Black
+            break;
+        }
+
+        // B. Escaped to infinity
+        if (r > 100.0f) {
+            float3 final_dir = normalize(curr_pos3D - prev_pos3D);
+            // color = sample_skybox(final_dir);
+            color = sample_skybox(final_dir, skybox_texture);
+            break;
+        }
+
+        // C. Intersected the Accretion Disk
+
+        // D. Intersected the Sun
+    }
+
+    // Convert float3 (0.0 - 1.0) to ARGB (0 - 255)
+    uint r_byte = (uint)(clamp(color.x, 0.0f, 1.0f) * 255.0f);
+    uint g_byte = (uint)(clamp(color.y, 0.0f, 1.0f) * 255.0f);
+    uint b_byte = (uint)(clamp(color.z, 0.0f, 1.0f) * 255.0f);
+    
+    uint argb = (255u << 24) | (r_byte << 16) | (g_byte << 8) | b_byte;
+    
+    // Write directly into the CPU-readable array
+    pixels[gid.y * uniforms.width + gid.x] = argb;
+}
+```
+
+# IV Visual Fidelity
+Although the computation of the light paths has been simplified to a single Binet equation, it is more than sifficient for demonstrating the key characteristics of a black hole. While most of the effects on the accretion disc aren't physically accurate, the simulation of the foundational behavior of light around the black hole gives rise to the famous gravitational lensing effect on the accretion disc and the space behind the black hole.
 
 ### 1. Gravitational Lensing
 
