@@ -165,7 +165,7 @@ $$
 
 ### Initial conditions
 
-To numerically evaluate the specific paths, we need the initial value $u(0)$ and its derivative $u’(0)$. Consider the orbital equation derived earlier (3),
+For the implementation, we will be using geometrized units, where $$G = c = M = 1$$, which sets our geometric mass to $$m = 0.5$$, simplifying the $$3mu^2$$ term to $$1.5u^2$$. To numerically evaluate the specific paths, we need the initial value $u(0)$ and its derivative $u’(0)$. Consider the orbital equation derived earlier (3),
 
 $$
 \left( \frac{du}{d\phi} \right)^2 = \frac{1}{b^2} - u^2 + 2mu^3 \quad \dots \ (3)
